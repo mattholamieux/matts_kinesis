@@ -38,7 +38,7 @@ a note about the filters
 
 
 
-==== in progress notes for the class ====
+# (in progress) notes for the class
 important notes
 * if adding additional sun modes
   * create a new sun_mode_[num].lua file in the lib folder
