@@ -1,6 +1,6 @@
 # notes for testing 
 ## installation
-* install the file: `;install https://github.com/jaseknighter/kinesis`
+* install the script: `;install https://github.com/jaseknighter/kinesis`
 * restart the norns
 * load kinesis
 
