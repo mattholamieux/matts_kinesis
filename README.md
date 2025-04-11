@@ -34,7 +34,11 @@ a note about the filters
 * sun 2: in addition to notes and swing, you can adjust filter resonance and amp (using k1 and e2/e3 to change the direction of the sun)
 * both suns share parmeters, so for example, changing the filter cutoff with sun 2 will actually update the filter cutoff when both suns notes are playing. (thinking...if someone wants separate settings for each sun, they can code it themselves during the workshop)
 * the code for sun mode #3 is in `/lib/sun_mode_3.lua`. the sound making stuff is at the end of the file.
-  
+
+## switching modes
+* k1 + k2/k3 to switch modes
+* the other modes don't do anything musical yet
+* mode 4, has no interactivity built in
 
 
 
