@@ -1,17 +1,17 @@
-================= notes for testing =================
-#installation
+# notes for testing 
+## installation
 * install the file: `;install https://github.com/jaseknighter/kinesis`
 * restart the norns
 * load kinesis
 
-#quick start
+## quick start
 at the moment, the script loads into sun mode #3, which uses the moonshine engine (renamed `Engine_Kinesis`)
 
-##start notes playing
+## start notes playing
 * turn e2 to change the first sun's notes
 * turn e3 to change the first sun's notes
 
-##record and play note changes
+## record and play note changes
 * press k2 (notice the `1r-` changes to `1r+`)
 * turn e2 to record some note changes
 * press k2 (notice the `1r+` changes back to `1r-`)
@@ -20,7 +20,7 @@ a notes about notes
 * after recording, each note will randomply play itself at 1 octave below, 1 above, 2 above, or at its defined frequency regular
 * when sun 2 is playing recorded notes, its division will switch between 1/16 and 1/32 at the end of its loop
 
-### start the filter
+## start the filter
 * k1+e2 to rotate sun1 to face the next ray (`1r-` should now say `5r-`)
 * turn e2 change the filter (same as for notes)
 * press k2, record filter changes, and press k2 again (same as for notes)
