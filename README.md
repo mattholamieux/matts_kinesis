@@ -1,17 +1,17 @@
 ================= notes for testing =================
-##installation
-* install the file: `;install https://github.com/jaseknighter/kinesis
+#installation
+* install the file: `;install https://github.com/jaseknighter/kinesis`
 * restart the norns
 * load kinesis
 
-##quick start
+#quick start
 at the moment, the script loads into sun mode #3, which uses the moonshine engine (renamed `Engine_Kinesis`)
 
-###start notes playing
+##start notes playing
 * turn e2 to change the first sun's notes
 * turn e3 to change the first sun's notes
 
-###record and play note changes
+##record and play note changes
 * press k2 (notice the `1r-` changes to `1r+`)
 * turn e2 to record some note changes
 * press k2 (notice the `1r+` changes back to `1r-`)
@@ -29,7 +29,7 @@ a notes about notes
 a note about the filters
 * when sun 2 is playing recorded filter changes, the swing of its notes will switch between 0 and 10 at the end of its loop
 
-### other options/notes
+## other options/notes
 * sun 1: in addition to notes and swing, you can adjust attack and release (using k1 and e2/e3 to change the direction of the sun)
 * sun 2: in addition to notes and swing, you can adjust filter resonance and amp (using k1 and e2/e3 to change the direction of the sun)
 * both suns share parmeters, so for example, changing the filter cutoff with sun 2 will actually update the filter cutoff when both suns notes are playing. (thinking...if someone wants separate settings for each sun, they can code it themselves during the workshop)
