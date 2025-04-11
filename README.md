@@ -9,7 +9,7 @@ at the moment, the script loads into sun mode #3, which uses the moonshine engin
 
 ## start notes playing
 * turn e2 to change the first sun's notes
-* turn e3 to change the first sun's notes
+* turn e3 to change the second sun's notes
 
 ## record and play note changes
 * press k2 (notice the `1r-` changes to `1r+`)
