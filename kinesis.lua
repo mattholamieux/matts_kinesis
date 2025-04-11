@@ -38,7 +38,7 @@ musicutil = require 'musicutil'
 include "lib/utilities"
 local Sun = include "lib/sun"
 
-engine.name = 'Moonshine'
+engine.name = 'Kinesis'
 
 screen_dirty = true
 local prev_norns_menu_status = false

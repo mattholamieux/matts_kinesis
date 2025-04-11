@@ -1,5 +1,6 @@
+// based on the moonshine engine
 // from: https://monome.org/docs/norns/engine-study-1/
-Engine_Moonshine : CroneEngine {
+Engine_Kinesis : CroneEngine {
 // All norns engines follow the 'Engine_MySynthName' convention above
 
 	var params;
@@ -7,7 +8,7 @@ Engine_Moonshine : CroneEngine {
 	alloc { // allocate memory to the following:
 
 		// add SynthDefs
-		SynthDef("Moonshine", {
+		SynthDef("Kinesis", {
 			arg out = 0,
 			freq, sub_div, noise_level,
 			cutoff, resonance,
@@ -68,7 +69,7 @@ Engine_Moonshine : CroneEngine {
   // ".getPairs" flattens the dictionary to alternating key,value array
   //   and "++" concatenates it:
 		this.addCommand("hz", "f", { arg msg;
-			Synth.new("Moonshine", [\freq, msg[1]] ++ params.getPairs)
+			Synth.new("Kinesis", [\freq, msg[1]] ++ params.getPairs)
 		});
 
 	}
