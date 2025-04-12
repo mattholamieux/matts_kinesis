@@ -99,10 +99,11 @@ function Sun:update_state()
 
   for _, index in ipairs(self.active_photons) do
     local ray, photon = self:get_ray_photon(index)
-    local p = self:get_photon(ray, photon)
-
-    -- update the brightness
-    p:set_brightness(max_level)
+    
+    -- is this needed???
+    -- local p = self:get_photon(ray, photon)
+    -- -- update the brightness
+    -- p:set_brightness(max_level)
 
     -- callback code: notify on ray or photon change
     if ray ~= self.last_selected_ray then
@@ -121,16 +122,6 @@ function Sun:update_state()
         if has_active_photons then return active_ray_brightness else  return nil end
     end
     self:set_ray_brightness(ray,brightness_fn)
-
-    -- note: this commented out code does the same thing as above
-    -- for i = 1, photons_per_ray do
-    --   local pi = self:get_photon(ray, i)
-    --   local flat_index = (ray - 1) * photons_per_ray + i
-    --   if not table_contains(self.active_photons, flat_index) then
-    --     pi:set_brightness(active_ray_brightness)
-    --   end
-    -- end
-
   end
 end
 
@@ -180,15 +171,17 @@ function Sun:set_velocity_manual(new_velocity)
 end
 
 function Sun:set_ray_brightness(ray, brightness)
+    local brightness_is_fn = type(brightness) == "function" 
     for photon = 1, photons_per_ray do
-        local brightness_is_fn = type(brightness) == "function" 
         local p = self:get_photon(ray, photon)
+
         -- if brightness is a function: 
         --    call it and redefine brightness as the function's return value
         --    otherwise, assume it is a number and set it back to itself
-        brightness = brightness_is_fn and brightness(photon,p) or brightness
+        brightness_level = brightness_is_fn and brightness(photon,p) or brightness
+
         -- safety check: before setting brightness, make sure it is now a number
-        if type(brightness) == "number" then p:set_brightness(brightness) end
+        if type(brightness_level) == "number" then p:set_brightness(brightness_level) end
     end
 end
 
