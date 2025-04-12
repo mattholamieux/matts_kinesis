@@ -1,6 +1,6 @@
 # notes for testing 
 ## installation
-* install the file: `;install https://github.com/jaseknighter/kinesis`
+* install the script: `;install https://github.com/jaseknighter/kinesis`
 * restart the norns
 * load kinesis
 
@@ -9,7 +9,7 @@ at the moment, the script loads into sun mode #3, which uses the moonshine engin
 
 ## start notes playing
 * turn e2 to change the first sun's notes
-* turn e3 to change the first sun's notes
+* turn e3 to change the second sun's notes
 
 ## record and play note changes
 * press k2 (notice the `1r-` changes to `1r+`)
