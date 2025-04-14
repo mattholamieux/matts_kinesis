@@ -446,7 +446,7 @@ function sun_mode_2.init_lattice(self)
     action = function(t) 
       sun_mode_2.event_router(self, nil, "sprocket")
     end,
-    division = 1/8,
+    division = 1/4,
     enabled = true
   }
   
@@ -454,7 +454,7 @@ function sun_mode_2.init_lattice(self)
     action = function(t) 
       sun_mode_2.event_router(self, nil, "sprocket")
     end,
-    division = 1/16,
+    division = 1/8,
     enabled = true
   }
 
@@ -519,7 +519,7 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
     if event_type == "end_of_loop"  then 
       if reflector_id == 3 then
         local curr_div = suns[2].sprocket_2.division
-        local next_div = curr_div == 1/16 and 1/32 or 1/16
+        local next_div = curr_div == 1/8 and 1/16 or 1/8
         print("sun".. self.index .. ": end of loop 3 next division", next_div) 
         suns[2].sprocket_2.division = next_div
       else
