@@ -23,18 +23,19 @@ function sun_mode_2.init(self)
 
   -- define which rays have reflectors
   if self.index == 1 then
-    self.reflector_locations = {1,5,9,13}
+    self.reflector_locations = {1,3,5,7,9,11,13,15}
   else
-    self.reflector_locations = {3,7,11,15}
+    self.reflector_locations = {2,4,6,8,10,12,14,16}
   end
 
   -- set the selected reflector
   self.selected_ray = self.reflector_locations[1]
 
   -- initialize state tables (keyed by reflector id)
-  self.record   = {}
-  self.play     = {}
-  self.loop     = {}
+  self.record       = {}
+  self.play         = {}
+  self.loop         = {}
+  self.engine_vals  = {}
   for i = 1, #self.reflector_locations do
     local rid = self.reflector_locations[i]
     self.record[rid]  = 0
@@ -326,16 +327,17 @@ end
 -- redraw routine.
 ------------------------------------------
 function sun_mode_2.redraw(self)
-  local x = (self.index == 1) and 1 or 65
-  local y = 62
-  screen.move(x, y)
-  screen.rect(x, y-5, 18, 8)
+  local bottom_left_x = (self.index == 1) and 1 or 65
+  local bottom_left_y = 62
+  screen.move(bottom_left_x, bottom_left_y)
+  screen.rect(bottom_left_x, bottom_left_y-5, 18, 8)
   screen.level(0)
   screen.fill()
   
-  screen.move(x, y)
+  screen.move(bottom_left_x, bottom_left_y)
   screen.level(3)
   local state_text = tostring(self.selected_ray)
+  -- update lower left labels for record/play/loop
   if self.state == 1 then
     local rec = (self.record[self.selected_ray] == 0) and "-" or "+"
     state_text = state_text .. states[self.state] .. rec
@@ -347,6 +349,39 @@ function sun_mode_2.redraw(self)
     state_text = state_text .. states[self.state] .. loop
   end
   screen.text(state_text)
+
+  -- update lower right labels for engine commands
+  local engine_command_data = sun_mode_2.find_engine_command(self,self.selected_ray) 
+  local engine_val = self.engine_vals[self.selected_ray]
+  local engine_fn_name = engine_fns[engine_command_data][1]
+
+  local top_right_x = (self.index == 1) and 60 or 127
+  local top_right_y = 5
+  screen.move(top_right_x, top_right_y)
+  screen.rect(top_right_x, top_right_y-5, 18, 8)
+  screen.level(0)
+  screen.fill()
+  
+  screen.move(top_right_x, top_right_y)
+  screen.level(3)
+  screen.text_right(engine_fn_name)
+
+  if engine_val then
+    engine_val = util.round(engine_val,0.1)
+    local bottom_right_x = (self.index == 1) and 60 or 127
+    local bottom_right_y = 62
+    screen.move(bottom_right_x, bottom_right_y)
+    screen.rect(bottom_right_x, bottom_right_y-5, 18, 8)
+    screen.level(0)
+    screen.fill()
+  
+    screen.move(bottom_right_x, bottom_right_y)
+    screen.level(3)
+    local engine_val = tostring(engine_val)
+    screen.text_right(engine_val)
+  end
+  
+
 
   local point_x, point_y = sun_mode_2.calc_pointer_position(self)
   screen.level(0)
@@ -472,6 +507,41 @@ function sun_mode_2.init_sounds(self)
   sun_mode_2.init_lattice(self)
 end
 
+local engine_range_mapper = function (range_data,value)
+  local min = range_data[1]
+  local max = range_data[2]
+  local round = range_data[3]
+  local round_precision =  range_data[4] and range_data[4] or 0
+  local mapped_val
+  if round == true then 
+    mapped_val = util.round(util.linlin(1,128,min,max,value),round_precision)
+  else
+    mapped_val = util.linlin(1,128,min,max,value)
+  end
+  return mapped_val
+end
+
+-- table containing engine command names
+--   along with functions to put the reflector values in proper ranges
+engine_fns = {
+  { "sp",  engine.speed,        {-5,5,true,0.1} },
+  { "d",   engine.density,      {1,40,true}     },
+  { "ps",  engine.pos,          {0,1}     },
+  { "sz",  engine.size,         {0.01,0.5}      },
+  { "j",   engine.jitter,       {0.,1}          },
+  { "we",  engine.buf_win_end,  {0.01,1}        },
+  { "rl",  engine.rec_level,    {0,1,true,0.01} },
+  { "pl",  engine.pre_level,    {0,1,true,0.01} },
+}
+
+function sun_mode_2.find_engine_command(self,reflector_id) 
+  for location=1,#self.reflector_locations do 
+    if self.reflector_locations[location] == reflector_id then 
+      return location 
+    end
+  end     
+end
+
 -- define an event router that consolidates 
 --   all the reflector events and lattice/sprocket events
 function sun_mode_2.event_router(self, reflector_id, event_type, value)
@@ -479,20 +549,29 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
   
   if not self.sprocket_1 or not self.sprocket_2 then return end
 
-
   if sun == 1 then
     if event_type == "process" then 
-      if reflector_id == 1 then 
-        sun_mode_2.save_note(self,reflector_id,value)
-      elseif reflector_id == 5 then
-        sun_mode_2.set_cutoff(self,reflector_id,value)
-      elseif reflector_id == 9 then
-        sun_mode_2.set_attack(self,reflector_id,value)
-      elseif reflector_id == 13 then
-        sun_mode_2.set_release(self,reflector_id,value)
+      local voice = 1
+      local engine_command_data = sun_mode_2.find_engine_command(self,reflector_id) 
+      local engine_command_ranges = engine_fns[engine_command_data][3]
+      local mapped_val = engine_range_mapper(engine_command_ranges,value)
+      local engine_fn_name = engine_fns[engine_command_data][1]
+      local engine_fn = engine_fns[engine_command_data][2]
+      self.engine_vals[reflector_id] = mapped_val
+      engine_fn(voice,mapped_val)
+      if engine_fn_name == "ps" then
+        engine.reset_pos(voice,1)
+        clock.run(function()
+          clock.sleep(0.1)
+          engine.reset_pos(voice,0)
+        end)
       end
     end
-    if event_type == "sprocket"    then sun_mode_2.play_note(self) end
+
+
+    if event_type == "sprocket" then 
+      -- sun_mode_2.play_note(self) 
+    end
     
     -- unused events
     -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
@@ -503,30 +582,38 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
   elseif sun == 2 then
     -- print("sun 2",reflector_id,event_type,value)
     if event_type == "process" then 
-      if reflector_id == 3 then 
-        sun_mode_2.save_note(self,reflector_id,value)
-      elseif reflector_id == 7 then
-        sun_mode_2.set_cutoff(self,reflector_id,value)
-      elseif reflector_id == 11 then
-        sun_mode_2.set_attack(self,reflector_id,value)
-      elseif reflector_id == 15 then
-        sun_mode_2.set_release(self,reflector_id,value)
+      local voice = 1
+      local engine_command_data = sun_mode_2.find_engine_command(self,reflector_id) 
+      local engine_command_ranges = engine_fns[engine_command_data][3]
+      local mapped_val = engine_range_mapper(engine_command_ranges,value)
+      local engine_fn_name = engine_fns[engine_command_data][1]
+      local engine_fn = engine_fns[engine_command_data][2]
+      self.engine_vals[reflector_id] = mapped_val
+      engine_fn(voice,mapped_val)
+      if engine_fn_name == "ps" then
+        engine.reset_pos(voice,1)
+        clock.run(function()
+          clock.sleep(0.1)
+          engine.reset_pos(voice,0)
+        end)
       end
     end
 
-    if event_type == "sprocket" then sun_mode_2.play_note(self) end
+    if event_type == "sprocket" then 
+      -- sun_mode_2.play_note(self)  
+    end
     
     if event_type == "end_of_loop"  then 
-      if reflector_id == 3 then
-        local curr_div = suns[2].sprocket_2.division
-        local next_div = curr_div == 1/8 and 1/16 or 1/8
-        print("sun".. self.index .. ": end of loop 3 next division", next_div) 
-        suns[2].sprocket_2.division = next_div
-      else
-        print("sun".. self.index .. ": end of loop 7 reset swing") 
-        local curr_swing = suns[2].sprocket_2.swing 
-        suns[2].sprocket_2:set_swing(curr_swing == 0 and 10 or 0)
-      end
+      -- if reflector_id == 3 then
+      --   local curr_div = suns[2].sprocket_2.division
+      --   local next_div = curr_div == 1/8 and 1/16 or 1/8
+      --   print("sun".. self.index .. ": end of loop 3 next division", next_div) 
+      --   suns[2].sprocket_2.division = next_div
+      -- else
+      --   print("sun".. self.index .. ": end of loop 7 reset swing") 
+      --   local curr_swing = suns[2].sprocket_2.swing 
+      --   suns[2].sprocket_2:set_swing(curr_swing == 0 and 10 or 0)
+      -- end
     end
 
     -- unused events
@@ -537,55 +624,6 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
   end
 end
 
--- local midi_notes = { 64, 66, 68, 69, 71, 73, 75 }
-local hz_notes = { 329.62, 369.99, 415.30, 440.0, 493.88, 554.36, 622.25 }
-local note_scalars = {0.5,1,2,4}
-
-function sun_mode_2.save_note(self,reflector_id,value)
-  local note_ix = math.floor(util.linlin(1,128,1,#hz_notes,value))
-  local note = hz_notes[note_ix] * note_scalars[util.round(math.random()*3)+1]
-  local note_num = musicutil.freq_to_note_num(note)  
-  -- print("note",note_ix,value,note_num)
-  self.note = note
-end 
-
-function sun_mode_2.play_note(self)
-  if self.note then
-    -- print("play note", self.note)
-    engine.hz(self.note)
-  end
-end 
-
-
-function sun_mode_2.set_cutoff(self,reflector_id,value)
-  local cutoff = math.floor(util.linlin(1,128,100,10000,value))
-  engine.cutoff(cutoff)
-  -- print("set_cutoff",cutoff)
-end 
-
-function sun_mode_2.set_attack(self,reflector_id,value)
-  local attack = util.linlin(1,128,0.001,0.25,value)
-  engine.attack(attack)
-  -- print("attack",attack)
-end 
-
-function sun_mode_2.set_release(self,reflector_id,value)
-  local release = util.linlin(1,128,0.1,1,value)
-  engine.release(release)
-  -- print("release",release)
-end 
-
-function sun_mode_2.set_resonance(self,reflector_id,value)
-  local resonance = util.linlin(1,128,0,3.5,value)
-  engine.resonance(resonance)
-  -- print("resonance",resonance)
-end 
-
-function sun_mode_2.set_amp(self,reflector_id,value)
-  local amp = util.linlin(1,128,0,1,value)
-  engine.amp(amp)
-  -- print("amp",amp)
-end 
 
 
 return sun_mode_2

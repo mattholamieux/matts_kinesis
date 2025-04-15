@@ -42,7 +42,8 @@ include "lib/utilities"
 
 local Sun = include "lib/sun"
 
-engine.name = 'Kinesis'
+engine.name = 'Sunshine'
+-- engine.name = 'Kinesis'
 
 screen_dirty = true
 
@@ -72,8 +73,9 @@ function init()
   redrawtimer = metro.init(function()
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
+    -- elseif not norns.menu.status() and screen_dirty == true then
     elseif not norns.menu.status() then
-      redraw()      
+      redraw()
     end
     prev_norns_menu_status = norns.menu.status()
   end, 1/30, -1)

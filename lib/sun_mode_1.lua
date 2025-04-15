@@ -26,7 +26,7 @@ function sun_mode_1.init(self)
     self.cut_rate      =  1
     self.cut_rec       =  0.2 --0.5
     self.cut_pre       =  0 --0.5
-    self.cut_slew      =  0.5
+    self.cut_slew      =  0.1
     self.cut_loop_end  =  3
     sun_mode_1.init_softcut(self)   
 
@@ -47,7 +47,8 @@ end
 function sun_mode_1.init_softcut(self)
   print("init softcut", self.channel)
   -- send audio input to softcut input
-  audio.level_adc_cut(1)
+  audio.level_adc_cut(0)
+  audio.level_eng_cut(1)
   
   softcut.enable(self.cut_voice,1)                        -- voice, state
   softcut.buffer(self.cut_voice,1)                        -- voice, buffer

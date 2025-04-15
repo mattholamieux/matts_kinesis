@@ -142,6 +142,7 @@ function Sun:set_active_photons(ids)
   self.active_photons[i] = sun_photon_id
   end
   self:update_state()
+  screen_dirty = true
 end
 
 --change the active photons relative to the delta value
@@ -149,14 +150,15 @@ function Sun:set_active_photons_rel(delta)
   
   local new_active = {}
   if #self.active_photons == 0 then
-  new_active[1] = util.wrap(1 + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
+    new_active[1] = util.wrap(1 + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
   else
-  for i, ix in ipairs(self.active_photons) do
-  new_active[i] = util.wrap(ix + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
-  end
+    for i, ix in ipairs(self.active_photons) do
+      new_active[i] = util.wrap(ix + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
+    end
   end
   self.active_photons = new_active
   self:update_state()
+  screen_dirty = true
 end
 
 function Sun:set_velocity_manual(new_velocity)
