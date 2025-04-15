@@ -96,9 +96,9 @@ Engine_Sunshine : CroneEngine {
                         freq:((buf_win_end-buf_win_start)*maxBufferLength).reciprocal,
                         phase:buf_win_start
                     );
-
       var testsnd;
-      
+
+      // (rec_level).poll;
       RecordBuf.ar(sig, buf, offset: recording_offset, 
         recLevel: rec_level, preLevel: pre_level, run: 1.0, loop: 1.0, 
         trigger: rec_buf_reset, doneAction: 0);
@@ -280,7 +280,7 @@ Engine_Sunshine : CroneEngine {
         var voice = msg[1]-1;
         liveRecordingParams[key] = msg[2];
         recorders[voice].set(key,liveRecordingParams[key]);
-        (["set recorder param", key, liveRecordingParams[key]]).postln;
+        // (["set recorder param", voice, key, liveRecordingParams[key]]).postln;
 			});
 		});
 
@@ -289,7 +289,7 @@ Engine_Sunshine : CroneEngine {
         var voice = msg[1]-1;
         voiceParams[key] = msg[2];
         voices[voice].set(key,voiceParams[key]);
-        (["set voice param", key, voiceParams[key]]).postln;
+        // (["set voice param", key, voiceParams[key]]).postln;
 			});
 		});
 
