@@ -9,7 +9,7 @@ by default:
 * the left sun (1) is set to granulate audio from norns input (using the new sunshine engine)
 * the right sun (2) does softcut stuff 
 
-## granulate audio from norns inputs with sun mode 1
+## granulate audio from norns inputs with sun 1 (in mode 2)
 on load, the sunshine engine immediately starts granulating audio input. each ray controls a different grain synth param (aka engine command). note, we aren't actually using norns params for this, just rolling our own system for now...
 
 the name of the grain synth param and its value are shown on the screen to the right of the sun at the top and bottom. the param names are abbreviated:
@@ -42,7 +42,7 @@ the name of the grain synth param and its value are shown on the screen to the r
 * change positions (pos) to scrub the play head 
 
 
-## modulate softcut
+## modulate softcut with sun 2 (in mode 1)
 * turn e2. currently, this causes the softcut rate to switch bewtween 1 and 2. it is triggered when the lighted photon arrives at every other ray
 
 ## switching modes
