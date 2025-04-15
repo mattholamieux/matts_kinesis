@@ -14,17 +14,17 @@ on load, the sunshine engine immediately starts granulating audio input. each ra
 
 the name of the grain synth param and its value are shown on the screen to the right of the sun at the top and bottom. the param names are abbreviated:
 
-"sp": engine.speed (default: 1)
-"dn": engine.density (rate of grain generation. default: 1 grain per second)
-"ps": engine.pos (scrub the grain player's playhead)
-"sz": engine.size (default: 0.1)
-"jt": engine.jitter (default: 0)
-"we": engine.buf_win_end (size of the window that can be granulated. default: 1)
-"rl": engine.rec_level (recording level. default: 1)
-"pl": engine.pre_level (prerecording level. default: 0)
+* "sp": engine.speed (default: 1)
+* "dn": engine.density (rate of grain generation. default: 1 grain per second)
+* "ps": engine.pos (scrub the grain player's playhead)
+* "sz": engine.size (default: 0.1)
+* "jt": engine.jitter (default: 0)
+* "we": engine.buf_win_end (size of the window that can be granulated. default: 1)
+* "rl": engine.rec_level (recording level. default: 1)
+* "pl": engine.pre_level (prerecording level. default: 0)
 
 ### switch between grain synth params
-* (sun1) e1+k2
+* (sun1) k1+e2
 
 ### record and play param modulations
 * select a param
