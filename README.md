@@ -5,39 +5,59 @@
 * load kinesis
 
 ## quick start
-at the moment, the script loads into sun mode #3, which uses the moonshine engine (renamed `Engine_Kinesis`)
+by default:
+* the left sun (1) is set to granulate audio from norns input (using the new sunshine engine)
+* the right sun (2) does softcut stuff 
 
-## play notes with sun mode 2
-### start notes playing
-* turn e3 to change the second sun's notes
+## granulate audio from norns inputs with sun mode 1
+on load, the sunshine engine immediately starts granulating audio input. each ray controls a different grain synth param (aka engine command). note, we aren't actually using norns params for this, just rolling our own system for now...
 
-### record and play note changes
-* press k3 (notice the `1r-` changes to `1r+`)
-* turn e3 to record some note changes
-* press k3 (notice the `1r+` changes back to `1r-`)
+the name of the grain synth param and its value are shown on the screen to the right of the sun at the top and bottom. the param names are abbreviated:
 
-a notes about notes
-* after recording, each note will randomply play itself at 1 octave below, 1 above, 2 above, or at its defined frequency regular
-* when sun 2 is playing recorded notes, its division will switch between 1/16 and 1/32 at the end of its loop
+"sp": engine.speed (default: 1)
+"dn": engine.density (rate of grain generation. default: 1 grain per second)
+"ps": engine.pos (scrub the grain player's playhead)
+"sz": engine.size (default: 0.1)
+"jt": engine.jitter (default: 0)
+"we": engine.buf_win_end (size of the window that can be granulated. default: 1)
+"rl": engine.rec_level (recording level. default: 1)
+"pl": engine.pre_level (prerecording level. default: 0)
 
-### start the filter
-* k1+e3 to rotate sun1 to face the next ray (`1r-` should now say `5r-`)
-* turn e3 change the filter (same as for notes)
-* press k3, record filter changes, and press k2 again (same as for notes)
+### switch between grain synth params
+* (sun1) e1+k2
 
-a note about the filters
-* when sun 2 is playing recorded filter changes, the swing of its notes will switch between 0 and 10 at the end of its loop
+### record and play param modulations
+* select a param
+* press k2 (notice the `-` changes to `+`)
+* turn e2 to record some param changes
+* press k2 (notice the `+` changes back to `-`)
+* select a different param and repeat the steps
+
+### freeze and scrub grains with a static buffer
+* reload script to get back to default params
+* let the grains emit for about 10 seconds to fill the recording buffer
+* set speed (sp) to 0
+* set pre-record level to 1 (pl)
+* set record level to 0 (rl)
+* change positions (pos) to scrub the play head 
+
 
 ## modulate softcut
 * turn e2. currently, this causes the softcut rate to switch bewtween 1 and 2. it is triggered when the lighted photon arrives at every other ray
-
 
 ## switching modes
 * k1 + k2/k3 to switch modes
 * the other modes don't do anything musical yet
 * mode 4, has no interactivity built in
 
-
+## todo
+* fix bugs (see comments in main `kinesis.lua` file for details on known bugs)
+* update code comments
+* consider having two grain voices (one per sun) so they aren't clobbering each other when both suns are set to mode 2
+* finish coding a mode to granulate an audio file
+* finish coding ability to swich between modes
+* add ability to reset the phase of the density trigger so multiple players can manually sync up with each other
+* add code/comments for workshop attendees to add pitch control
 
 # (in progress) notes for the class
 important notes

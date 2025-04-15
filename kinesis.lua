@@ -27,11 +27,19 @@
 
 ---------------------------------------------------
 -- todo: 
--- update each sun mode's init func so it sets state details 
---   in a unique table (e.g. `suns[sun_id][mode_id]`)
---   question: should each sun's mode have unique data or 
---     should each sun's mode share data with the other sun's mode?
+-- fix code so redraw timer doesn't have to constantly set screen_dirty to true
+-- consider updating each sun mode's init func so it sets state details in a unique table
+--   (e.g. `suns[sun_id][mode_id]`)
+-- for sun 2 (granular voice):
+--   finish setting up the mode to send granulate a recording
+--   add a param to switch between live and recorded mode
+--   should we create two voices (one for each sun)?
+--   update the sun brightness to reflect the position of the grainbuf playhead
 -- add the --[[ 0_0 ]]-- for good places to edit!
+-- add "ideas for experimenting for each sun"
+--   for example: 
+--     switch rec and pre levels for the live recording
+--     add panning
 ---------------------------------------------------
 
 lattice = require("lattice")
@@ -60,7 +68,7 @@ suns = {}
 --   mode2: (supercollider synth controls) uses the reflection library to animate photons in each "ray"
 --   mode3: (generic) encoder changes the active "photon"
 --   mode4: (generic) encoder sets a photon's velocity
-sun_modes = {1, 2} 
+sun_modes = {2, 1} 
 
 function init()
   init_sun(1)
@@ -71,6 +79,7 @@ function init()
   softcut.buffer_clear()
  
   redrawtimer = metro.init(function()
+    screen_dirty = true -- this shouldn't be necessary by default
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
     -- elseif not norns.menu.status() and screen_dirty == true then
@@ -78,7 +87,7 @@ function init()
       redraw()
     end
     prev_norns_menu_status = norns.menu.status()
-  end, 1/30, -1)
+  end, 1/15, -1)
 
   clock.run(function()
     --delay starting the redraw timer
@@ -150,9 +159,13 @@ function redraw()
   screen.text(sun_modes[1])     -- 1st sun: draw the sun's number
   screen.move(67,5)             -- 2nd sun: move the screen cursor 
   screen.text(sun_modes[2])     -- 2nd sun: draw the sun's number
-
-  screen.update()               -- update the screen
   
+  
+  screen.level(15)               -- set a brightness level for the screen
+  screen.move(64,0)
+  screen.line(64,64)
+  screen.stroke()
+  screen.update()               -- update the screen
   -- set screen_dirty to false so we only draw when necessary
   screen_dirty = false        
 end
