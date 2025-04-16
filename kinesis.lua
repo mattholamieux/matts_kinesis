@@ -79,7 +79,7 @@ function init()
   softcut.buffer_clear()
  
   redrawtimer = metro.init(function()
-    screen_dirty = true -- this shouldn't be necessary by default
+    -- screen_dirty = true -- this shouldn't be necessary by default
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
     -- elseif not norns.menu.status() and screen_dirty == true then

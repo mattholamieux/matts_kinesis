@@ -376,8 +376,6 @@ Engine_Sunshine : CroneEngine {
 
 	}
 
-
-
   free {
     "free sunshine!".postln;  
     grainPlayers.do({ arg player; player.free; });
