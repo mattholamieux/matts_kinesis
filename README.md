@@ -19,10 +19,19 @@ the name of the grain synth param and its value are shown on the screen to the r
 * "ps": engine.pos (scrub the grain player's playhead)
 * "sz": engine.size (default: 0.1)
 * "jt": engine.jitter (default: 0)
-* "we": engine.buf_win_end (size of the window that can be granulated. default: 1)
+<!-- * "we": engine.buf_win_end (size of the window that can be granulated. default: 1) -->
+* "es": engine.env_shape (the shape of the grain envelope. default: 6)
 * "rl": engine.rec_level (recording level. default: 1)
 * "pl": engine.pre_level (prerecording level. default: 0)
 
+grain envelope shapes are:
+* exponential
+* squared
+* linear
+* sine
+* cubed
+* welches
+ 
 ### switch between grain synth params
 * (sun1) k1+e2
 

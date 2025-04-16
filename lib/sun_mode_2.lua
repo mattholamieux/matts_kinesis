@@ -497,7 +497,7 @@ function sun_mode_2.init_sounds(self)
       local photon_val = util.linlin(min,max,1,128,engine_command_default_val)
       sun_mode_2.set_reflector_cursor(self,reflector_id,photon_val)
       local engine_fn_name = engine_commands[engine_command_data][1]
-      --update the envine_vals table to display the value on the screen
+      --update the engine_vals table to display the value on the screen
       self.engine_vals[reflector_id] = engine_command_default_val
       print("set default engine command: ", engine_fn_name, engine_command_default_val)
     end
@@ -564,8 +564,9 @@ engine_commands = {
   { "dn",    engine.density,      { 1,40,true },        1         },
   { "ps",    engine.pos,          { 0,1 },              0         },
   { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
-  { "jt",    engine.jitter,       { 0.,1 },             0         },
-  { "we",    engine.buf_win_end,  { 0.01,1 },           1         },
+  { "jt",    engine.jitter,       { 0,1 },              0         },
+  { "ge",    engine.grain_env,    { 1,6,true,1 },              0         },
+--{ "we",    engine.buf_win_end,  { 0.01,1 },           1         },
   { "rl",    engine.rec_level,    { 0,1,true,0.01 },    1         },
   { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
 }
@@ -580,6 +581,33 @@ function sun_mode_2.get_engine_command_data(self,reflector_id)
   return command_location
 end
 
+------------------------------------------
+-- add params
+------------------------------------------
+-- TODO: figure out the best way to reference self (using `suns[1]` for now)
+params:add_trigger("reset_grain_phase","reset grain phase")
+params:set_action("reset_grain_phase", function()
+  engine_params = {}
+  local voice = 1
+  for reflector_location_ix=1,#engine_commands do
+    local reflector_id = suns[1].reflector_locations[reflector_location_ix]
+    local engine_command_data = sun_mode_2.get_engine_command_data(suns[1],reflector_id) 
+    local engine_val = suns[1].engine_vals[reflector_id]
+    local engine_fn_name = engine_commands[engine_command_data][1]
+    -- print(engine_val, engine_fn_name)
+   engine_params[engine_fn_name]=engine_val
+  end
+  -- engine.update_grain_player(voice,speed,density,pos,size,jitter,grain_env)
+  engine.update_grain_player(
+    voice,
+    engine_params["sp"], -- speed
+    engine_params["dn"],
+    engine_params["ps"],
+    engine_params["sz"],
+    engine_params["jt"],
+    engine_params["ge"]
+  )
+end)
 ------------------------------------------
 -- event router (configure controls here)
 ------------------------------------------
@@ -600,7 +628,6 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
       local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
       local engine_fn_name = engine_commands[engine_command_data][1]
       local engine_fn = engine_commands[engine_command_data][2]
-      print(engine_fn, mapped_val,engine_fn_name)
       self.engine_vals[reflector_id] = mapped_val
       engine_fn(sc_voice,mapped_val)
     end
@@ -625,7 +652,7 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
       local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
       local engine_fn_name = engine_commands[engine_command_data][1]
       local engine_fn = engine_commands[engine_command_data][2]
-      print(engine_fn, mapped_val,engine_fn_name)
+      -- print(engine_fn, mapped_val,engine_fn_name)
       self.engine_vals[reflector_id] = mapped_val
       engine_fn(sc_voice,mapped_val)
     end
