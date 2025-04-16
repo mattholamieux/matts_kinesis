@@ -33,18 +33,26 @@
 -- for sun 2 (granular voice):
 --   finish setting up the mode to send granulate a recording
 --   add a param to switch between live and recorded mode
---   should we create two voices (one for each sun)?
---   update the sun brightness to reflect the position of the grainbuf playhead
+--   should we create two voices (one for each sun)? (if we do, fix references to `sc_voice` in the lua code)
+--   update the sun brightness to reflect the position of the 
+--     grainbuf playhead
 -- add the --[[ 0_0 ]]-- for good places to edit!
--- add "ideas for experimenting for each sun"
+-- add "ideas for experimenting for each sun" (maybe label as "beginner", "intermediate", "advanced"? or maybe just include beginner ideas since more experienced folks should be able to come up with their own ideas for experimenting?)
 --   for example: 
+--     move the engine_commands table into the scope of `self` so you can have two granular synths running together that execute different engine commands
 --     switch rec and pre levels for the live recording
 --     add panning
+--     freeze grains param (perhaps remove this from the final code 
+--       so it can be an exercize?)
+--     uncomment out a print/postln/poll statement and see what it looks like (idea: number the print/postln/poll statements to provide a sort of breadcrumb path into the code)
+--      good locations to do this:
+--          sun_mode_2.update_engine: print("update engine", engine_fn_name, mapped_val)
 ---------------------------------------------------
 
 lattice = require("lattice")
 reflection = require 'reflection'
 musicutil = require 'musicutil'
+fileselect=require 'fileselect'
 
 include "lib/utilities"
 
@@ -79,7 +87,6 @@ function init()
   softcut.buffer_clear()
  
   redrawtimer = metro.init(function()
-    -- screen_dirty = true -- this shouldn't be necessary by default
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
     -- elseif not norns.menu.status() and screen_dirty == true then

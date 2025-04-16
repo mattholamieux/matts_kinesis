@@ -246,21 +246,22 @@ Engine_Sunshine : CroneEngine {
     });
 
     context.server.sync;
-    //note: not yet fully implemented
-    this.addCommand("set_mode", "ii", { arg msg;
+    this.addCommand("live", "i", { arg msg;
       var voice = msg[1] - 1;
-      var mode = msg[2] - 1; // 0: live, 1: recorded
       var buf_array_ix;
-      voiceModes[voice] = mode;
-      grainPlayers[voice].set(\mode, mode);
+      voiceModes[voice] = 0; // set mode to 1: live mode
+      grainPlayers[voice].set(
+        \buf, liveBuffers[voice],
+      );
     });
 
-    this.addCommand("read", "isff", { arg msg;
+    this.addCommand("sample", "is", { arg msg;
         var voice = msg[1]-1;
         var path = msg[2];
-        var sample_start = msg[3];
-        var sample_length = msg[4];
+        var sample_start = 0;
+        var sample_length = maxBufferLength*60;
         var bpath = fileBuffers[voice].path;
+        voiceModes[voice] = 1; // set mode to 1: sample mode
         if((bpath.notNil).and(bpath == path),{
             (["file already loaded",path]).postln;
             this.readDisk(voice,nil,sample_start,sample_length);
@@ -347,7 +348,7 @@ Engine_Sunshine : CroneEngine {
           })
       });
       
-    this.addCommand("update_grain_player", "ifffffi", { | msg |
+    this.addCommand("reload_grain_player", "ifffffi", { | msg |
       var voice = msg[1]-1; 
       var speed = msg[2]; 
       var density = msg[3]; 
@@ -356,12 +357,18 @@ Engine_Sunshine : CroneEngine {
       var jitter = msg[6]; 
       var grain_env = msg[7]-1;
       var old_voice = grainPlayers[voice];
+      var buffer;
+      if (voiceModes[voice] == 0,{
+        buffer = liveBuffers[voice];
+      },{
+        buffer = fileBuffers[voice];
+      });
       grainPlayers.put(voice,Synth.after(recorders[voice], 
         \grain_player, [
           \voice, voice,
           \out, context.out_b.index,
           \phase_out, phases[voice].index,
-          \buf, liveBuffers[voice],
+          \buf, buffer,
           \speed, speed,
           \density, density,
           \pos, pos,
@@ -370,7 +377,6 @@ Engine_Sunshine : CroneEngine {
           \grain_env, grain_env,
         ])
       );
-      "update grain player and free old player".postln;
       old_voice.free;
     })
 

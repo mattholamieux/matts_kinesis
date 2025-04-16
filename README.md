@@ -31,7 +31,7 @@ grain envelope shapes are:
 * sine
 * cubed
 * welches
- 
+
 ### switch between grain synth params
 * (sun1) k1+e2
 
@@ -49,6 +49,15 @@ grain envelope shapes are:
 * set pre-record level to 1 (pl)
 * set record level to 0 (rl)
 * change positions (pos) to scrub the play head 
+
+alternatively, use the `freeze grains` trigger in the params menu. 
+
+### reset grain phase
+the `reset grain phase` trigger in the params menu regenerates the supercollider grain player. it is meant to be used to sync the beat of the grains with other music (e.g. when playing in an ensemble)
+
+### switch to play an audio file
+* select an audio file with the `sample` param file selector
+* set mode to `recorded` with the `set mode` param
 
 
 ## modulate softcut with sun 2 (in mode 1)

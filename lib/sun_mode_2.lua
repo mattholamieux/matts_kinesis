@@ -8,7 +8,7 @@
 --  connect reflection events to functions
 --  for controlling sounds through this router
 
-local sun_mode_2 = {}
+sun_mode_2 = {}
 
 -- define state names.
 local states = {'r','p','l'}  -- record, play, loop
@@ -20,7 +20,7 @@ function sun_mode_2.init(self)
   self.reflection_indices = {}
   self.max_cursor = 8 * 16
   self.state = 1  -- 1 = record, 2 = play, 3 = loop
-
+  self.grain_mode = 1 -- 1 = granulate live audio, 2 = granulate an audio file
   -- define which rays have reflectors
   if self.index == 1 then
     self.reflector_locations = {1,3,5,7,9,11,13,15}
@@ -51,6 +51,84 @@ function sun_mode_2.init(self)
   sun_mode_2.select_reflector(self, self.selected_ray)
 
   sun_mode_2.init_sounds(self)
+
+  ------------------------------------------
+  -- add params
+  ------------------------------------------
+  params:add_option("mode","set mode",{"live","recorded"})
+  params:set_action("mode",function(mode) 
+    -- mode 1 = granulate live audio
+    -- mode 2 = granulate an audio file
+    if mode == 2 then
+      local file = params:get("sample")
+      if file ~= "-" then
+        self.grain_mode = mode
+        engine.sample(1,file)
+      else
+         print("select a file before setting mode to 'recorded'")
+         params:set("mode",1)
+      end
+    else
+      self.grain_mode = mode
+      engine.live(1)
+    end
+
+  end)
+  
+  params:add_file("sample","sample")
+  params:set_action("sample",function(file)
+    if params:get("mode") == 2 then
+      print("new sample ",file)
+      if file~="-" then
+        engine.sample(1,file)
+      end
+    end
+  end)
+  params:add_trigger("freeze_grains","freeze grains")
+  params:set_action("freeze_grains", function()
+    -- to freeze grains we need to:
+    --   set speed and jitter to 0
+    --   for live granulation set pre_level to 1 and rec_level to 0 
+    --   note: if there are reflection recordings running for these, freezing might not exactly happen
+    local speed_reflector            =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"sp")
+    local jitter_reflector           =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"jt")
+    local prerecord_level_reflector  =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"pl")
+    local record_level_reflector     =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"rl")
+    sun_mode_2.update_engine(self, 1, "sp", 64)
+    sun_mode_2.update_engine(self, 1, "jt", 0)
+    sun_mode_2.update_engine(self, 1, "pl", 128) 
+    sun_mode_2.update_engine(self, 1, "rl", 0)
+    clock.run(function() 
+      clock.sleep(0.1)
+      sun_mode_2.set_reflector_cursor(self, speed_reflector           , 64)
+      sun_mode_2.set_reflector_cursor(self, jitter_reflector          , 0)
+      sun_mode_2.set_reflector_cursor(self, prerecord_level_reflector , 128)
+      sun_mode_2.set_reflector_cursor(self, record_level_reflector    , 0)
+    end)
+  end)
+
+  params:add_trigger("reset_grain_phase","reset grain phase")
+  params:set_action("reset_grain_phase", function()
+    engine_params = {}
+    local voice = 1 -- note: this would need to be changed if we update the code for multiple voices (e.g. one per sun)
+    for reflector_location_ix=1,#engine_commands do
+      local reflector_id = self.reflector_locations[reflector_location_ix]
+      local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
+      local engine_val = self.engine_vals[reflector_id]
+      local engine_command_name = engine_command_data[1]
+      engine_params[engine_command_name]=engine_val
+    end
+    -- engine.reload_grain_player(voice,speed,density,pos,size,jitter,grain_env)
+    engine.reload_grain_player(
+      voice,
+      engine_params["sp"], -- speed
+      engine_params["dn"],
+      engine_params["ps"],
+      engine_params["sz"],
+      engine_params["jt"],
+      engine_params["ge"]
+    )
+  end)
 
   -- define a deinit function to
   --   remove any variables or tables that might stick around
@@ -118,7 +196,7 @@ function sun_mode_2.enc(self, n, delta)
   else
     if alt_key == true then
       -- Change the selected reflector.
-      sun_mode_2.deselect_reflector(self, self.selected_ray)
+      -- sun_mode_2.deselect_reflector(self, self.selected_ray) -- TODO: REMOVE THIS LINE: NOT NEEDED
       self.selected_ray = sun_mode_2.get_next_ray(self, delta)
       sun_mode_2.select_reflector(self, self.selected_ray)
       sun_mode_2.draw_reflector_cursor(self, self.selected_ray)
@@ -139,15 +217,12 @@ function sun_mode_2.key(self, n, z)
     if self.record[reflector_id] == 1 and z == 0 then
       self.record[reflector_id] = 0
       self.reflectors[reflector_id]:set_rec(0)
-      print("key: stop reflector recording")
-    
-      -- tab.print(self.reflectors[reflector_id].event_prev)
+      print("key: stop reflector recording")    
     elseif self.record[reflector_id] == 0 and z == 0 then
       print("key: start reflector recording",reflector_id,self.reflectors[reflector_id])
       self.record[reflector_id] = 1
       self.reflectors[reflector_id]:clear()
       self.reflectors[reflector_id]:set_rec(1)
-      tab.print(self.reflectors[reflector_id].event_prev)
     end
   elseif self.state == 2 then -- play state
     if z == 0 then
@@ -236,6 +311,7 @@ function sun_mode_2.set_reflector_cursor(self, reflector_id, val)
   end
   
   self.reflection_indices[reflector_id].reflection_cursor = val
+  print("set_reflector_cursor", reflector_id, val)
   sun_mode_2.draw_reflector_cursor(self, reflector_id)
 end
 
@@ -353,7 +429,7 @@ function sun_mode_2.redraw(self)
   -- update lower right labels for engine commands
   local engine_command_data = sun_mode_2.get_engine_command_data(self,self.selected_ray) 
   local engine_val = self.engine_vals[self.selected_ray]
-  local engine_fn_name = engine_commands[engine_command_data][1]
+  local engine_command_name = engine_command_data[1]
 
   local top_right_x = (self.index == 1) and 60 or 127
   local top_right_y = 5
@@ -364,7 +440,7 @@ function sun_mode_2.redraw(self)
   
   screen.move(top_right_x, top_right_y)
   screen.level(3)
-  screen.text_right(engine_fn_name)
+  screen.text_right(engine_command_name)
 
   if engine_val then
     if engine_val < 10 then 
@@ -459,7 +535,7 @@ function sun_mode_2.init_reflectors(self)
     end
     
     self.reflectors[reflector_id].end_callback = function()
-      print("pattern end callback", reflector_id)
+      -- print("pattern end callback", reflector_id)
       sun_mode_2.event_router(self, reflector_id, "pattern_end")
       -- local is_looping = (self.loop[reflector_id] == 1)
       -- if not is_looping then self.play[reflector_id] = 0 end
@@ -488,18 +564,19 @@ function sun_mode_2.init_sounds(self)
     local sc_voice = 1
     local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
     if engine_command_data then
-      local engine_command_ranges = engine_commands[engine_command_data][3]
-      local engine_command_default_val = engine_commands[engine_command_data][4]
+      local engine_command_ranges = engine_command_data[3]
+      local engine_command_default_val = engine_command_data[4]
       local min = engine_command_ranges[1]
       local max = engine_command_ranges[2]
+      
       --set the photon to match the default value 
       --this will send an update to the sc engine to set the default value
       local photon_val = util.linlin(min,max,1,128,engine_command_default_val)
+      -- print("init reflector cursor",min,max,engine_command_default_val,photon_val)
       sun_mode_2.set_reflector_cursor(self,reflector_id,photon_val)
-      local engine_fn_name = engine_commands[engine_command_data][1]
+      
       --update the engine_vals table to display the value on the screen
       self.engine_vals[reflector_id] = engine_command_default_val
-      print("set default engine command: ", engine_fn_name, engine_command_default_val)
     end
   end
 end
@@ -558,6 +635,9 @@ end
 
 -- table containing engine command names
 --   along with functions to put the reflector values in proper ranges
+--   IMPORTANT: the order of the engine commands sets which sun ray/reflector 
+--              updates which engine command. if there are more items in the `engine_commands`
+--              table than there are items in the `reflector_locations` table, the code will break
 engine_commands = {
 --  abbr     command              range                 default         
   { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
@@ -572,42 +652,64 @@ engine_commands = {
 }
 
 function sun_mode_2.get_engine_command_data(self,reflector_id) 
-  local command_location
-  for location=1,#self.reflector_locations do 
+  local command_location, command_data
+  for location=1,#engine_commands do 
     if self.reflector_locations[location] == reflector_id then 
       command_location = location 
+      command_data = engine_commands[command_location]
+      return command_data
     end
   end
-  return command_location
 end
 
-------------------------------------------
--- add params
-------------------------------------------
--- TODO: figure out the best way to reference self (using `suns[1]` for now)
-params:add_trigger("reset_grain_phase","reset grain phase")
-params:set_action("reset_grain_phase", function()
-  engine_params = {}
-  local voice = 1
-  for reflector_location_ix=1,#engine_commands do
-    local reflector_id = suns[1].reflector_locations[reflector_location_ix]
-    local engine_command_data = sun_mode_2.get_engine_command_data(suns[1],reflector_id) 
-    local engine_val = suns[1].engine_vals[reflector_id]
-    local engine_fn_name = engine_commands[engine_command_data][1]
-    -- print(engine_val, engine_fn_name)
-   engine_params[engine_fn_name]=engine_val
+-- for each item in the `engine_commands` table, look up the command name acronym
+--   which is located in the first slot of the `engine_commands` table
+--   and if the acronym matches the one in this functions `engine_command_name` parameter,
+--   look up the corresponding `reflector_id` from the `self.reflector_locations` table
+function sun_mode_2.get_reflector_id_by_engine_command_name(self, engine_command_name)
+  local reflector_id
+  for engine_command_ix=1,#engine_commands do
+    local engine_command = engine_commands[engine_command_ix]
+    local command_name = engine_command[1]
+    if command_name == engine_command_name then
+      reflector_id = self.reflector_locations[engine_command_ix]
+      -- print("found reflector_id", reflector_id)
+      return reflector_id
+    end
   end
-  -- engine.update_grain_player(voice,speed,density,pos,size,jitter,grain_env)
-  engine.update_grain_player(
-    voice,
-    engine_params["sp"], -- speed
-    engine_params["dn"],
-    engine_params["ps"],
-    engine_params["sz"],
-    engine_params["jt"],
-    engine_params["ge"]
-  )
-end)
+  if not reflector_id then print("couldn't find reflector id for ", engine_command_name) end
+end
+  
+-- update supercollider engine and keep track of the updates
+-- note#1: for the third parameter (reflector_id_or_command_name) you can send either 
+--         a `reflector_id` 
+--         or the two letter acronym for the engine command (e.g. 'sz' for engine.size).
+--         see `engine_commands` above for the list of acronyms.
+-- note#2: the 4th parameter, `value`, is relative to the photon value (1-128)
+--           the update_engine code remaps these values to the ones expected by the supercollider engine
+--           for example, setting a value of 128 for speed would be mapped to 5 (i.e. max speed)
+function sun_mode_2.update_engine(self, sc_voice, reflector_id_or_command_name, value)
+  -- if reflector_id_or_command_name is a number, assumed it is a reflector_id
+  --   otherwise, assume it is a command name acronym from the `engine_commmands` table.
+  local reflector_id, engine_command_name, engine_command_data
+  if type(reflector_id_or_command_name) == "number" then
+    reflector_id = reflector_id_or_command_name
+    engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
+    engine_command_name = engine_command_data[1]
+  else
+    engine_command_name = reflector_id_or_command_name
+    reflector_id = sun_mode_2.get_reflector_id_by_engine_command_name(self, engine_command_name)
+    engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
+  end    
+  
+  local engine_command_ranges = engine_command_data[3]
+  local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
+  local engine_fn = engine_command_data[2]
+  self.engine_vals[reflector_id] = mapped_val
+  engine_fn(sc_voice,mapped_val)
+  print("update engine (reflector/command/mapped value/original)  ", reflector_id, engine_command_name, mapped_val,value)
+end
+  
 ------------------------------------------
 -- event router (configure controls here)
 ------------------------------------------
@@ -623,13 +725,7 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
       -- here we are "processing" changes triggered by
       --   encoder 3 and reflector recordings
       local sc_voice = 1
-      local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
-      local engine_command_ranges = engine_commands[engine_command_data][3]
-      local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
-      local engine_fn_name = engine_commands[engine_command_data][1]
-      local engine_fn = engine_commands[engine_command_data][2]
-      self.engine_vals[reflector_id] = mapped_val
-      engine_fn(sc_voice,mapped_val)
+      sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
     end
 
     if event_type == "sprocket" then 
@@ -648,11 +744,11 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
       --   encoder 3 and reflector recordings
       local sc_voice = 1
       local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
-      local engine_command_ranges = engine_commands[engine_command_data][3]
+      local engine_command_ranges = engine_command_data[3]
       local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
-      local engine_fn_name = engine_commands[engine_command_data][1]
-      local engine_fn = engine_commands[engine_command_data][2]
-      -- print(engine_fn, mapped_val,engine_fn_name)
+      local engine_command_name = engine_command_data[1]
+      local engine_fn = engine_command_data[2]
+      -- print(engine_fn, mapped_val,engine_command_name)
       self.engine_vals[reflector_id] = mapped_val
       engine_fn(sc_voice,mapped_val)
     end

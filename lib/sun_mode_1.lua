@@ -45,7 +45,7 @@ function sun_mode_1.init(self)
 end
 
 function sun_mode_1.init_softcut(self)
-  print("init softcut", self.channel)
+  print("init softcut")
   -- send audio input to softcut input
   audio.level_adc_cut(0)
   audio.level_eng_cut(1)
