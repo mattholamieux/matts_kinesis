@@ -37,11 +37,11 @@ function sun_mode_2.init(self)
   self.loop         = {}
   self.engine_vals  = {}
   for i = 1, #self.reflector_locations do
-    local rid = self.reflector_locations[i]
-    self.record[rid]  = 0
-    self.play[rid]    = 1
-    self.loop[rid]    = 1
-    sun_mode_2.deselect_reflector(self, rid)
+    local reflector_id = self.reflector_locations[i]
+    self.record[reflector_id]  = 0
+    self.play[reflector_id]    = 1
+    self.loop[reflector_id]    = 1
+    sun_mode_2.deselect_reflector(self, reflector_id)
   end
 
   sun_mode_2.init_reflectors(self)
@@ -195,7 +195,17 @@ function sun_mode_2.enc(self, n, delta)
     self.state = util.clamp(self.state + delta, 1, #states)
   else
     if alt_key == true then
-      -- Change the selected reflector.
+      -- change the selected reflector
+      -- but first, if the curent reflector is recording, stop the recording
+      for i=1,#self.reflector_locations do
+        local reflector_id = self.reflector_locations[i]  
+        if self.record[reflector_id] == 1 then -- if the reflector is recording then
+          print("stop recording in progress...",reflector_id)
+          self.record[reflector_id] = 0                   -- set the recording flag to 0
+          self.reflectors[reflector_id]:set_rec(0)        -- stop recording
+          self.reflectors[reflector_id]:clear()           -- clear the reflector
+        end
+      end
       -- sun_mode_2.deselect_reflector(self, self.selected_ray) -- TODO: REMOVE THIS LINE: NOT NEEDED
       self.selected_ray = sun_mode_2.get_next_ray(self, delta)
       sun_mode_2.select_reflector(self, self.selected_ray)
@@ -311,7 +321,7 @@ function sun_mode_2.set_reflector_cursor(self, reflector_id, val)
   end
   
   self.reflection_indices[reflector_id].reflection_cursor = val
-  print("set_reflector_cursor", reflector_id, val)
+  -- print("set_reflector_cursor", reflector_id, val)
   sun_mode_2.draw_reflector_cursor(self, reflector_id)
 end
 
@@ -707,7 +717,7 @@ function sun_mode_2.update_engine(self, sc_voice, reflector_id_or_command_name, 
   local engine_fn = engine_command_data[2]
   self.engine_vals[reflector_id] = mapped_val
   engine_fn(sc_voice,mapped_val)
-  print("update engine (reflector/command/mapped value/original)  ", reflector_id, engine_command_name, mapped_val,value)
+  -- print("update engine (reflector/command/mapped value/original)  ", reflector_id, engine_command_name, mapped_val,value)
 end
   
 ------------------------------------------

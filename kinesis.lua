@@ -37,6 +37,8 @@
 --   update the sun brightness to reflect the position of the 
 --     grainbuf playhead
 -- add the --[[ 0_0 ]]-- for good places to edit!
+-- add some tables that would be good to explore from the repl with for...in loops
+--    for example: suns[1].reflector locations and suns[1].reflectors
 -- add "ideas for experimenting for each sun" (maybe label as "beginner", "intermediate", "advanced"? or maybe just include beginner ideas since more experienced folks should be able to come up with their own ideas for experimenting?)
 --   for example: 
 --     move the engine_commands table into the scope of `self` so you can have two granular synths running together that execute different engine commands
@@ -89,7 +91,6 @@ function init()
   redrawtimer = metro.init(function()
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
-    -- elseif not norns.menu.status() and screen_dirty == true then
     elseif not norns.menu.status() then
       redraw()
     end
