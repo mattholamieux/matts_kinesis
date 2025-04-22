@@ -63,10 +63,10 @@ function Ray:clear_state(MIN_LEVEL)
   end
 end
 
-function Ray:redraw(force)
+function Ray:redraw(force_redraw)
   for _, p in ipairs(self.photons) do
     p.x, p.y = self:calc_photon_position(p)
-    p:redraw(force)
+    p:redraw(force_redraw)
   end
 end
 

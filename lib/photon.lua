@@ -30,12 +30,12 @@ function Photon:set_brightness(level)
   self.brightness = math.floor(level)
 end
 
-function Photon:has_changed(force)
-  return force or (self.last_drawn_brightness == nil or self.last_drawn_brightness ~= self.brightness)
+function Photon:has_changed(force_redraw)
+  return force_redraw or (self.last_drawn_brightness == nil or self.last_drawn_brightness ~= self.brightness)
 end
 
-function Photon:redraw(force)
-  if not self:has_changed(force) then return end  
+function Photon:redraw(force_redraw)
+  if not self:has_changed(force_redraw) then return end  
   screen.level(self.brightness)
   screen.move(self.x, self.y)
   screen.circle(self.x, self.y, photon_length / 2)

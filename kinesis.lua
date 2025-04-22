@@ -114,7 +114,6 @@ function init_sun(sun)
 end
 
 function key(n, z)
-  screen_dirty = true
   if n==1 then
     if  z==1 then
       alt_key = true
@@ -129,7 +128,6 @@ function key(n, z)
       end
     end
   elseif n==3 then 
-    print(n,z)
     if z==0 then
       if alt_key == true then
         sun_modes[2] = util.wrap(sun_modes[2]+1,1,num_sun_modes)
@@ -145,7 +143,6 @@ function key(n, z)
 end
 
 function enc(n, delta)
-  screen_dirty = true
   if n == 1 then
     suns[1]:enc(n,delta)
     suns[2]:enc(n,delta)

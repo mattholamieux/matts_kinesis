@@ -91,7 +91,7 @@ function morph(self, s_val, f_val, duration, steps, shape, callback, caller_id, 
   
   local done = false
   if steps_remaining <= 1 then
-    next_val = f_val  -- force final value.
+    next_val = f_val  -- force_redraw final value.
     done = true
   end
   

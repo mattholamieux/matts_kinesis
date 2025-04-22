@@ -1,4 +1,5 @@
 -- lib/sun_mode_2.lua 
+-- granulator
 -- this mode uses the reflection library
 -- Reference: https://monome.org/docs/norns/reference/lib/reflection
 
@@ -50,6 +51,10 @@ function sun_mode_2.init(self)
   -- select the initial reflector
   sun_mode_2.select_reflector(self, self.selected_ray)
 
+  -- initialize the engine commands
+  sun_mode_2.init_engine_commands()
+
+  -- initialize sounds
   sun_mode_2.init_sounds(self)
 
   ------------------------------------------
@@ -373,20 +378,6 @@ function sun_mode_2.select_reflector(self, reflector_id)
     end
   end
   self:set_ray_brightness(reflector_id,set_reflector_brightness)
-  -- for photon = 1, PHOTONS_PER_RAY do
-    -- local p = self:get_photon(reflector_id, photon)
-    -- if photon < PHOTONS_PER_RAY then
-    --   p:set_brightness(MIN_LEVEL)
-    -- else
-    --   local brightness = sun_mode_2.get_photon_brightness(self, reflector_id, photon)
-    --   local morphing_callback = function(next_val, done)
-    --   end
-    --   p:morph_photon(15, brightness, 1, 15, 'lin', morphing_callback, reflector_id)
-    -- end
-    -- if sun_mode_2.ray_has_cursor(self) then
-    --   sun_mode_2.draw_reflector_cursor(self, reflector_id)
-    -- end
-  -- end
 end
 
 ------------------------------------------
@@ -444,7 +435,7 @@ function sun_mode_2.redraw(self)
   local top_right_x = (self.index == 1) and 60 or 127
   local top_right_y = 5
   screen.move(top_right_x, top_right_y)
-  screen.rect(top_right_x, top_right_y-5, 18, 8)
+  screen.rect(top_right_x-15, top_right_y-5, 18, 8)
   screen.level(0)
   screen.fill()
   
@@ -461,7 +452,7 @@ function sun_mode_2.redraw(self)
     local bottom_right_x = (self.index == 1) and 60 or 127
     local bottom_right_y = 62
     screen.move(bottom_right_x, bottom_right_y)
-    screen.rect(bottom_right_x, bottom_right_y-5, 18, 8)
+    screen.rect(bottom_right_x-15, bottom_right_y-5, 18, 8)
     screen.level(0)
     screen.fill()
   
@@ -629,6 +620,26 @@ end
 -- supercollider communication code
 ------------------------------------------
 
+-- initializes a table containing engine command names
+--   along with functions to put the reflector values in proper ranges
+--   IMPORTANT: the order of the engine commands sets which sun ray/reflector 
+--              updates which engine command. if there are more items in the `engine_commands`
+--              table than there are items in the `reflector_locations` table, the code will break
+sun_mode_2.init_engine_commands = function ()
+  engine_commands = {
+    --  abbr     command              range                 default         
+    { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
+    { "dn",    engine.density,      { 1,40,true },        1         },
+    { "ps",    engine.pos,          { 0,1 },              0         },
+    { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
+    { "jt",    engine.jitter,       { 0,1 },              0         },
+    { "ge",    engine.grain_env,    { 1,6,true,1 },              0         },
+    { "rl",    engine.rec_level,    { 0,1,true,0.01 },    1         },
+    { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
+  --{ "we",    engine.buf_win_end,  { 0.01,1 },           1         },
+  }
+end
+
 sun_mode_2.engine_cmd_range_mapper = function (range_data,value)
   local min = range_data[1]
   local max = range_data[2]
@@ -643,23 +654,6 @@ sun_mode_2.engine_cmd_range_mapper = function (range_data,value)
   return mapped_val
 end
 
--- table containing engine command names
---   along with functions to put the reflector values in proper ranges
---   IMPORTANT: the order of the engine commands sets which sun ray/reflector 
---              updates which engine command. if there are more items in the `engine_commands`
---              table than there are items in the `reflector_locations` table, the code will break
-engine_commands = {
---  abbr     command              range                 default         
-  { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
-  { "dn",    engine.density,      { 1,40,true },        1         },
-  { "ps",    engine.pos,          { 0,1 },              0         },
-  { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
-  { "jt",    engine.jitter,       { 0,1 },              0         },
-  { "ge",    engine.grain_env,    { 1,6,true,1 },              0         },
---{ "we",    engine.buf_win_end,  { 0.01,1 },           1         },
-  { "rl",    engine.rec_level,    { 0,1,true,0.01 },    1         },
-  { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
-}
 
 function sun_mode_2.get_engine_command_data(self,reflector_id) 
   local command_location, command_data
@@ -732,17 +726,15 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
 
   if sun == 1 then
     if event_type == "process" then 
-      -- here we are "processing" changes triggered by
-      --   encoder 3 and reflector recordings
+      -- update changes triggered by
+      --   encoder 3 and/or reflector recordings
       local sc_voice = 1
       sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
+      
     end
 
-    if event_type == "sprocket" then 
-      -- sun_mode_2.play_note(self) 
-    end
-    
     -- unused events
+    -- if event_type == "sprocket"  then --[[ do something with sprocket update]] end
     -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
     -- if event_type == "record_start"  then --[[ do something with record_start]] end
     -- if event_type == "record_end"  then --[[ do something with record_end]] end
@@ -750,37 +742,15 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
     -- if event_type == "pattern_end"   then --[[ do something with pattern_end]] end
   elseif sun == 2 then
     if event_type == "process" then 
-      -- here we are "processing" changes triggered by
-      --   encoder 3 and reflector recordings
-      local sc_voice = 1
-      local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
-      local engine_command_ranges = engine_command_data[3]
-      local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
-      local engine_command_name = engine_command_data[1]
-      local engine_fn = engine_command_data[2]
-      -- print(engine_fn, mapped_val,engine_command_name)
-      self.engine_vals[reflector_id] = mapped_val
-      engine_fn(sc_voice,mapped_val)
-    end
-
-    if event_type == "sprocket" then 
-      -- sun_mode_2.play_note(self)  
-    end
-    
-    if event_type == "end_of_loop"  then 
-      -- if reflector_id == 1 then
-      --   local curr_div = suns[2].sprocket_2.division
-      --   local next_div = curr_div == 1/8 and 1/16 or 1/8
-      --   print("sun".. self.index .. ": end of loop 3 next division", next_div) 
-      --   suns[2].sprocket_2.division = next_div
-      -- else
-      --   print("sun".. self.index .. ": end of loop 7 reset swing") 
-      --   local curr_swing = suns[2].sprocket_2.swing 
-      --   suns[2].sprocket_2:set_swing(curr_swing == 0 and 10 or 0)
-      -- end
+      -- update changes triggered by
+      --   encoder 3 and/or reflector recordings
+      local sc_voice = 2
+      sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
     end
 
     -- unused events
+    -- if event_type == "sprocket"  then --[[ do something with sprocket update]] end
+    -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
     -- if event_type == "record_start"  then --[[ do something with record_start]] end
     -- if event_type == "record_end"  then --[[ do something with record_end]] end
     -- if event_type == "step"      then --[[ do something with step]] end

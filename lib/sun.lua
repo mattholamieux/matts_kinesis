@@ -194,9 +194,9 @@ function Sun:set_ray_brightness(ray, brightness)
   end
 end
 
-function Sun:redraw(force)
+function Sun:redraw(force_redraw)
   for _, ray in ipairs(self.rays) do
-    ray:redraw(force)
+    ray:redraw(force_redraw)
   end
 
   local cx = (self.index == 1) and SUN1_X or SUN2_X
