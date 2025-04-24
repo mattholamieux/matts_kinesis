@@ -6,11 +6,11 @@
 
 ## quick start
 by default:
-* the left sun (1) is set to granulate audio from norns input (using the new sunshine engine)
-* the right sun (2) does softcut stuff 
+* the left sun is set to granulate audio from norns input (using a new SuperCollider engine called `sunshine`)
+* the right sun processes audio with softcut
 
-## granulate audio from norns inputs with sun 1 (in mode 2)
-on load, the sunshine engine immediately starts granulating audio input. each ray controls a different grain synth param (aka engine command). note, we aren't actually using norns params for this, just rolling our own system for now...
+## granulate audio (sun1)
+on load, the sunshine engine immediately starts granulating audio input. each ray controls a different grain synth param (aka `engine command`). 
 
 the name of the grain synth param and its value are shown on the screen to the right of the sun at the top and bottom. the param names are abbreviated:
 
@@ -20,30 +20,32 @@ the name of the grain synth param and its value are shown on the screen to the r
 * "sz": engine.size (default: 0.1)
 * "jt": engine.jitter (default: 0)
 <!-- * "we": engine.buf_win_end (size of the window that can be granulated. default: 1) -->
-* "es": engine.env_shape (the shape of the grain envelope. default: 6)
+* "ge": engine.env_shape (the shape of the grain envelope. default: 6)
 * "rl": engine.rec_level (recording level. default: 1)
 * "pl": engine.pre_level (prerecording level. default: 0)
 
-grain envelope shapes are:
-* exponential
-* squared
-* linear
-* sine
-* cubed
-* welches
+### grain envelope
+the ray controlling the grain envelopes (`ge`), provides six envelope shapes. they are:
+* exponential (1.0)
+* squared (2.0)
+* linear (3.0)
+* sine (4.0)
+* cubed (5.0)
+* welches (6.0)
 
 ### switch between grain synth params
-* (sun1) k1+e2
+* k1+e2
 
 ### record and play param modulations
-* select a param
-* press k2 (notice the `-` changes to `+`)
+* select a param (using k1+e2)
+* press k2 (notice the `-` changes to `+`) to start recording
 * turn e2 to record some param changes
-* press k2 (notice the `+` changes back to `-`)
-* select a different param and repeat the steps
+* press k2 (notice the `+` changes back to `-`) to end recording
 
-### freeze and scrub grains with a static buffer
-* reload script to get back to default params
+### stop/erase param modulations
+* press k2 twice
+
+### freeze grains
 * let the grains emit for about 10 seconds to fill the recording buffer
 * set speed (sp) to 0
 * set pre-record level to 1 (pl)
@@ -60,45 +62,46 @@ the `reset grain phase` trigger in the params menu regenerates the supercollider
 * set mode to `recorded` with the `set mode` param
 
 
-## modulate softcut with sun 2 (in mode 1)
-* turn e2. currently, this causes the softcut rate to switch bewtween 1 and 2. it is triggered when the lighted photon arrives at every other ray
+## softcut (sun 2)
+by default, the 2nd sun is configured to switch the softcut rate between 1 and 2. it is triggered when the lighted photon arrives at every other ray.
+
+to start softcut rate switching, turn e3 until you see the sun pulsating. the velocity at which you turn e3 gets translated into the speed at which softcut switches between 1 and 2.
+
+to stop rate switching, turn e3 in the opposite direction.
+
 
 ## switching modes
-* k1 + k2/k3 to switch modes
-* the other modes don't do anything musical yet
-* mode 4, has no interactivity built in
+* k1 + k2/k3 to switch modes of the two suns
 
 ## todo
 * fix bugs (see comments in main `kinesis.lua` file for details on known bugs)
 * update code comments
 * consider having two grain voices (one per sun) so they aren't clobbering each other when both suns are set to mode 2
-* finish coding a mode to granulate an audio file
-* finish coding ability to swich between modes
-* add ability to reset the phase of the density trigger so multiple players can manually sync up with each other
-* add code/comments for workshop attendees to add pitch control
 
-# (in progress) notes for the class
-important notes
-* if adding additional sun modes
-  * create a new sun_mode_[num].lua file in the lib folder
-  * add an include for the new mode file created in the prior step in the `sun.lua` file. for example:
-  `local sun_mode_5 = include "lib/sun_mode_5"`
-  * update `num_sun_modes` in the `sun.lua` file
-* warning if you are calling a function with `.` instead of `:` (warning is like: `attempt to index a number value (local 'self')`). if you get this warning, ask about `syntactic sugar`
-
-things to try
-note: you may want to duplicate a line of code and comment it out before making changes so it is easier to return to the original code.
-
-* change number of rays
+# modifying and exploring the script
+## simple modifications/explorations
+### `sun.lua` modifications
+* change number of rays 
 * change number of photons per ray
 * change photon size
-* morphing function
-* set brightness
-* set mode to 2 and run `set_velocity_manual`
-* morph a photon:
-suns[1].rays[1]:morph_photon(4,0,15,0.25,15,nil,function(next_val, done, id) print("extcb",next_val, done, id) end,123)
-* set multiple photons active: 
-suns[1]:set_active_photons ({{1,4},{3,4},{5,4},{7,4},{9,4},{11,4},{13,4},{15,4}})
+* ADD ADDITIONAL SIMPLE MODIFICATIONS
+### sun_mode 1 (softcut)
+* photon velocity
+  * in the REPL, run `suns[2]:set_velocity_manual(1)`
+  * what happens when different values are passed to the function (e.g., `suns[2]:set_velocity_manual(10)`)?
+  * why do you get an error message when you run `suns[2].set_velocity_manual(1)`?
+  * review the code in `sun.lua` to understand how the `set_velocity_manual` function works
+* softcut rate
+  * find the code at the bottom of the `sun_mode_1.lua` file that changes softcut rate and modify the values.
+### photon modifications
+  * set multiple photons active: 
+`suns[1]:set_active_photons ({{1,4},{3,4},{5,4},{7,4},{9,4},{11,4},{13,4},{15,4}})`
+* ADD ADDITIONAL MODIFICATIONS/EXPLORATIONs
 
-
-suns[1]:set_active_photons ({{1,1},{3,2},{5,3},{7,4},{9,5},{11,6},{13,7},{15,8}})
+## more advanced stuff
+### add an additional sun mode
+* create a new sun_mode_[num].lua file in the lib folder (e.g. `sun_mode5.lua`)
+* add an include for the new mode file created in the prior step in the `sun.lua` file. for example:
+  `local sun_mode_5 = include "lib/sun_mode_5"`
+* update `num_sun_modes` in the `sun.lua` file
+### ADD MORE ADVANCED STUFF
