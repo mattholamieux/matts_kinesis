@@ -19,7 +19,7 @@ function Ray:new(sun_index, ray_index)
   setmetatable(obj, Ray)
 
   -- instantiate the photons using the new Photon class (only id is passed)
-  for i = 1, PHOTONS_PER_RAY do
+  for i=1, PHOTONS_PER_RAY do
     obj.photons[i] = Photon:new(i)
     obj.photons[i]:set_brightness(MIN_LEVEL)  -- default brightness (MIN_LEVEL)
   end

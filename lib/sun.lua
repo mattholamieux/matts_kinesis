@@ -135,7 +135,7 @@ end
 -- set active photons by an array of {ray_id, photon_id} pairs
 function Sun:set_active_photons(ids)
   self.active_photons = {}
-  for i = 1, #ids do
+  for i=1, #ids do
   local ray = ids[i][1]
   local photon = ids[i][2]
   local sun_photon_id = ((ray - 1) * PHOTONS_PER_RAY) + photon

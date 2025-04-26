@@ -10,10 +10,12 @@ function sun_mode_3.init(self)
 
   self:update_state()
 
-  -- define a deinit function to
-  --   remove any variables or tables that might stick around
-  --   after switching to a different sun mode
-  --   for example: a lattice or reflection instance
+  ------------------------------------------
+  -- deinit
+  -- remove any variables or tables that might stick around
+  -- after switching to a different sun mode
+  -- for example: a lattice or reflection instance
+  ------------------------------------------
   self.deinit = function()
     print("deinit sun mode: 4")
     self.photon_changed_callback  = nil

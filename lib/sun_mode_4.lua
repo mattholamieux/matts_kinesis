@@ -2,29 +2,31 @@
 local sun_mode_4 = {}
 
 function sun_mode_4.init(self)
-    --set variables needed for mode 4 code
-    self.active_photons = {1}
-    self.wait_clock = nil
-    self.velocity_deltas = {}
-    self.sun_pulsing = false
-    self.sun_pulse_phase = 0
-    self.sun_pulse_speed = 0.2
-    self.previous_input_direction = 0
-    self.reversed = false
-    self.recently_reversed = false
-    self.previewing = false
-    self.sun_level_base = 10
-    self.sun_level = self.sun_level_base
+  --set variables needed for mode 4 code
+  self.active_photons = {1}
+  self.wait_clock = nil
+  self.velocity_deltas = {}
+  self.sun_pulsing = false
+  self.sun_pulse_phase = 0
+  self.sun_pulse_speed = 0.2
+  self.previous_input_direction = 0
+  self.reversed = false
+  self.recently_reversed = false
+  self.previewing = false
+  self.sun_level_base = 10
+  self.sun_level = self.sun_level_base
 
-    self:update_state()
+  self:update_state()
 
-    -- define a deinit function to
-    --   remove any variables or tables that might stick around
-    --   after switching to a different sun mode
-    --   for example: a lattice or reflection instance
-    self.deinit = function()
-      print("deinit sun mode: 2")
-    end  
+  ------------------------------------------
+  -- deinit
+  -- remove any variables or tables that might stick around
+  -- after switching to a different sun mode
+  -- for example: a lattice or reflection instance
+  ------------------------------------------
+  self.deinit = function()
+    print("deinit sun mode: 2")
+  end  
 
 end
 

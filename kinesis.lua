@@ -154,7 +154,7 @@ end
   
 function redraw()
   if screen_dirty then screen.clear() end
-  for i = 1, 2 do
+  for i=1, 2 do
     suns[i]:redraw(screen_dirty)
   end
 
