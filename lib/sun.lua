@@ -92,18 +92,15 @@ end
 -- note: update_state is not used in mode 3
 function Sun:update_state()
   for _, ray in ipairs(self.rays) do
-  ray:clear_state(MIN_LEVEL)
+    ray:clear_state(MIN_LEVEL)
   end
 
   for _, index in ipairs(self.active_photons) do
     local ray, photon = self:get_ray_photon(index)
     
-    -- is this needed???
-    -- local p = self:get_photon(ray, photon)
-    -- -- update the brightness
-    -- p:set_brightness(MAX_LEVEL)
-
+    ------------------------------------------------
     -- callback code: notify on ray or photon change
+    ------------------------------------------------
     
     -- >>>>first, check if a ray or photon has changed
     --   and if there is a callback defined
@@ -111,24 +108,25 @@ function Sun:update_state()
     local photon_changed = photon ~= self.last_selected_photon  and self.photon_changed_callback and self.last_selected_photon
     -- print("photon changed",self.photon_changed_callback and self.last_selected_photon and photon ~= self.last_selected_photon )
     
-    -- >>>>>then, call the callback
+    -- >>>>>then, call the callbacks
     if ray_changed then
       self.ray_changed_callback(self, ray, photon)
     elseif photon_changed then
       self.photon_changed_callback(self, ray, photon)
     end
 
+    --
     self.last_selected_photon = photon
     self.last_selected_ray = ray
-
     
     -- highlight non-active photons on the same ray
     local brightness_fn = function(photon)
-    local flat_index = (ray - 1) * PHOTONS_PER_RAY + photon
-    local has_active_photons = not table_contains(self.active_photons, flat_index)
-    if has_active_photons then return ACTIVE_RAY_BRIGHTNESS else  return nil end
-  end
-  self:set_ray_brightness(ray,brightness_fn)
+      local flat_index = (ray - 1) * PHOTONS_PER_RAY + photon
+      local has_active_photons = not table_contains(self.active_photons, flat_index)
+      if has_active_photons then return ACTIVE_RAY_BRIGHTNESS else  return nil end
+    end
+
+    self:set_ray_brightness(ray,brightness_fn)
   end
 end
 

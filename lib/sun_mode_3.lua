@@ -1,13 +1,19 @@
 -- lib/sun_mode_3.lua
+-- softcut
+-- this mode uses the softcut module
+-- Reference: https://monome.org/docs/norns/softcut/ 
+
 local sun_mode_3 = {}
 
 function sun_mode_3.init(self)
-  -- add code here to do create state variables 
-  -- required for sun mode 1  
+  -- create state variables 
   self.active_photons = {1,9}
+
+  -- assign callbacks (defined below) to handle events when a photon or ray changes
   self.photon_changed_callback  = sun_mode_3.photon_changed
   self.ray_changed_callback     = sun_mode_3.ray_changed
 
+  -- call update state (defined in `sun.lua`) to
   self:update_state()
 
   ------------------------------------------
