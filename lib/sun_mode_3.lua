@@ -7,7 +7,7 @@ local sun_mode_3 = {}
 
 function sun_mode_3.init(self)
   -- create state variables 
-  self.active_photons = {1,9}
+  self.active_photons = {3,22}
 
   -- assign callbacks (defined below) to handle events when a photon or ray changes
   self.photon_changed_callback  = sun_mode_3.photon_changed
@@ -23,7 +23,7 @@ function sun_mode_3.init(self)
   -- for example: a lattice or reflection instance
   ------------------------------------------
   self.deinit = function()
-    print("deinit sun mode: 4")
+    print("deinit sun mode: 3")
     self.photon_changed_callback  = nil
     self.ray_changed_callback     = nil
   end  
@@ -31,11 +31,13 @@ function sun_mode_3.init(self)
 end
 
 function sun_mode_3.photon_changed(self,ray_id,photon_id)
-  print("photon_changed",self.index,ray_id,photon_id)
+  -- do something when the photon changes
+  -- print("photon changed",self.index,ray_id,photon_id)
 end
 
 function sun_mode_3.ray_changed(self,ray_id,photon_id)
-  print("ray_changed",self.index,ray_id,photon_id)
+  -- do something when the ray changes
+  -- print("ray changed",self.index,ray_id,photon_id)
 end
 
 function sun_mode_3.enc(self, n, delta)
@@ -44,12 +46,12 @@ function sun_mode_3.enc(self, n, delta)
 end
 
 function sun_mode_3.key(self, n, z)
-
+  -- do something when a key is pressed
 end
 
 
 function sun_mode_3.redraw(self)
-  -- add code here to draw something only when sun mode == 4
+  -- draw something here
 end
 
 return sun_mode_3

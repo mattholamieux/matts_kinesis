@@ -25,7 +25,7 @@ function sun_mode_4.init(self)
   -- for example: a lattice or reflection instance
   ------------------------------------------
   self.deinit = function()
-    print("deinit sun mode: 2")
+    print("deinit sun mode: 4")
   end  
 
 end

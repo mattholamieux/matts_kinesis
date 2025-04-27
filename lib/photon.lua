@@ -36,6 +36,7 @@ end
 
 function Photon:redraw(force_redraw)
   if not self:has_changed(force_redraw) then return end  
+  -- print("redraw photon", self.id,force_redraw)
   screen.level(self.brightness)
   screen.move(self.x, self.y)
   screen.circle(self.x, self.y, photon_length / 2)

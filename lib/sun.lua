@@ -44,6 +44,8 @@ function Sun:new(index, mode, ray_changed_callback, photon_changed_callback)
     motion_clock = nil,
     direction = 0,
     sun_level = 10,
+    last_selected_rays = {},
+    last_selected_photons = {}
   }
   setmetatable(obj, Sun)
   
@@ -89,35 +91,42 @@ function Sun:get_photon(ray, photon)
   return self.rays[ray]:get_photon(photon)
 end
 
--- note: update_state is not used in mode 3
+-- note: update_state and self.last_selected_photon is not used in mode 3
 function Sun:update_state()
   for _, ray in ipairs(self.rays) do
     ray:clear_state(MIN_LEVEL)
   end
 
-  for _, index in ipairs(self.active_photons) do
-    local ray, photon = self:get_ray_photon(index)
+  for ix, photon_index in ipairs(self.active_photons) do
+    local ray, photon = self:get_ray_photon(photon_index)
     
     ------------------------------------------------
     -- callback code: notify on ray or photon change
     ------------------------------------------------
     
     -- >>>>first, check if a ray or photon has changed
-    --   and if there is a callback defined
-    local ray_changed = ray ~= self.last_selected_ray and self.ray_changed_callback and self.last_selected_ray
-    local photon_changed = photon ~= self.last_selected_photon  and self.photon_changed_callback and self.last_selected_photon
+    --   BUT ONLY IF THERE IS A CALLBACK DEFINED 
+    
+    local ray_changed = ray ~= self.last_selected_rays[ix] and 
+                        self.ray_changed_callback ~= nil
+                               
+    local photon_changed = photon ~= self.last_selected_photons[ix]  and 
+                           self.photon_changed_callback ~= nil
+                                     
     -- print("photon changed",self.photon_changed_callback and self.last_selected_photon and photon ~= self.last_selected_photon )
     
     -- >>>>>then, call the callbacks
     if ray_changed then
       self.ray_changed_callback(self, ray, photon)
+      -- print("ray changed",ix, photon_changed, ray, self.last_selected_rays[ix])
     elseif photon_changed then
+      -- print("photon changed",ix, photon_changed, photon, self.active_photons[ix], self.last_selected_photons[ix])
       self.photon_changed_callback(self, ray, photon)
     end
 
     --
-    self.last_selected_photon = photon
-    self.last_selected_ray = ray
+    self.last_selected_photons[ix] = photon
+    self.last_selected_rays[ix] = ray
     
     -- highlight non-active photons on the same ray
     local brightness_fn = function(photon)
@@ -140,23 +149,21 @@ function Sun:set_active_photons(ids)
   self.active_photons[i] = sun_photon_id
   end
   self:update_state()
-  screen_dirty = true
 end
 
 --change the active photons relative to the delta value
-function Sun:set_active_photons_rel(delta)
-  
+function Sun:set_active_photons_rel(delta) 
   local new_active = {}
   if #self.active_photons == 0 then
     new_active[1] = util.wrap(1 + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
   else
-    for i, ix in ipairs(self.active_photons) do
-      new_active[i] = util.wrap(ix + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
+    for ix, photon_ix in ipairs(self.active_photons) do
+      new_active[ix] = util.wrap(photon_ix + delta, 1, NUM_RAYS * PHOTONS_PER_RAY)
+      -- print("new active photon", ix, new_active[ix])
     end
   end
   self.active_photons = new_active
   self:update_state()
-  screen_dirty = true
 end
 
 function Sun:set_velocity_manual(new_velocity)
@@ -170,30 +177,31 @@ function Sun:set_velocity_manual(new_velocity)
   end
 
   self.motion_clock = clock.run(function()
-  while true do
-  clock.sleep(1 / math.abs(self.velocity))
-  self:set_active_photons_rel(self.direction)
-  end
+    while true do
+      clock.sleep(1 / math.abs(self.velocity))
+      self:set_active_photons_rel(self.direction)
+    end
   end)
 end
 
 function Sun:set_ray_brightness(ray, brightness)
   local brightness_is_fn = type(brightness) == "function" 
   for photon = 1, PHOTONS_PER_RAY do
-  local p = self:get_photon(ray, photon)
+    local p = self:get_photon(ray, photon)
 
-  -- if brightness is a function: 
-  --  call it and redefine brightness as the function's return value
-  --  otherwise, assume it is a number and set it back to itself
-  brightness_level = brightness_is_fn and brightness(photon,p) or brightness
+    -- if brightness is a function: 
+    --  call it and redefine brightness as the function's return value
+    --  otherwise, assume it is a number and set it back to itself
+    brightness_level = brightness_is_fn and brightness(photon,p) or brightness
 
-  -- safety check: before setting brightness, make sure it is now a number
-  if type(brightness_level) == "number" then p:set_brightness(brightness_level) end
+    -- safety check: before setting brightness, make sure it is now a number
+    if type(brightness_level) == "number" then p:set_brightness(brightness_level) end
   end
 end
 
 function Sun:redraw(force_redraw)
-  for _, ray in ipairs(self.rays) do
+  for ix, ray in ipairs(self.rays) do
+    -- if force_redraw then print("redraw ray",ix) end
     ray:redraw(force_redraw)
   end
 

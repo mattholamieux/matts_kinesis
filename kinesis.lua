@@ -153,7 +153,11 @@ function enc(n, delta)
 end
   
 function redraw()
-  if screen_dirty then screen.clear() end
+  if screen_dirty then 
+    screen.clear() 
+    -- print("screen dirty")
+  end
+
   for i=1, 2 do
     suns[i]:redraw(screen_dirty)
   end

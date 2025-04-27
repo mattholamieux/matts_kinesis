@@ -2,48 +2,48 @@
 local sun_mode_1 = {}
 
 function sun_mode_1.init(self)
-    -- set callbacks for changes in active photon/ray
-    self.photon_changed_callback  = sun_mode_1.photon_changed
-    self.ray_changed_callback     = sun_mode_1.ray_changed
-  
-    -- set variables needed for mode 1 code
-    -- variables for rotating the active photons 
-    self.active_photons = {1}
-    self.wait_clock = nil
-    self.velocity_deltas = {}
-    self.sun_pulsing = false
-    self.sun_pulse_phase = 0
-    self.sun_pulse_speed = 0.2
-    self.cut_previous_input_direction = 0
-    self.reversed = false
-    self.cut_recently_reversed = false
-    self.cut_previewing = false
-    self.sun_level_base = 10
-    self.sun_level = self.sun_level_base
+  -- set callbacks for changes in active photon/ray
+  self.photon_changed_callback  = sun_mode_1.photon_changed
+  self.ray_changed_callback     = sun_mode_1.ray_changed
 
-    -- initialize softcut and supporting variables   
-    self.cut_voice   =  self.index
-    self.cut_rate      =  1
-    self.cut_rec       =  0.2 --0.5
-    self.cut_pre       =  0 --0.5
-    self.cut_slew      =  0.1
-    self.cut_loop_end  =  3
-    sun_mode_1.init_softcut(self)   
+  -- set variables needed for mode 1 code
+  -- variables for rotating the active photons 
+  self.active_photons = {1}
+  self.wait_clock = nil
+  self.velocity_deltas = {}
+  self.sun_pulsing = false
+  self.sun_pulse_phase = 0
+  self.sun_pulse_speed = 0.2
+  self.cut_previous_input_direction = 0
+  self.reversed = false
+  self.cut_recently_reversed = false
+  self.cut_previewing = false
+  self.sun_level_base = 10
+  self.sun_level = self.sun_level_base
 
-    self:update_state()
+  -- initialize softcut and supporting variables   
+  self.cut_voice   =  self.index
+  self.cut_rate      =  1
+  self.cut_rec       =  0.2 --0.5
+  self.cut_pre       =  0 --0.5
+  self.cut_slew      =  0.1
+  self.cut_loop_end  =  3
+  sun_mode_1.init_softcut(self)   
 
-    ------------------------------------------
-    -- deinit
-    -- remove any variables or tables that might stick around
-    -- after switching to a different sun mode
-    -- for example: a lattice or reflection instance
-    ------------------------------------------
-    self.deinit = function()
-      print("deinit sun mode: 1")
-      softcut.buffer_clear_channel(self.index)
-      softcut.enable(1,0)
-    end  
+  self:update_state()
 
+  ------------------------------------------
+  -- deinit
+  -- remove any variables or tables that might stick around
+  -- after switching to a different sun mode
+  -- for example: a lattice or reflection instance
+  ------------------------------------------
+  self.deinit = function()
+    print("deinit sun mode: 1")
+    softcut.buffer_clear_channel(self.index)
+    softcut.enable(1,0)
+    sun_mode_1.set_velocity(self,0)
+  end
 end
 
 function sun_mode_1.init_softcut(self)
@@ -67,26 +67,22 @@ function sun_mode_1.init_softcut(self)
   softcut.pre_level(self.cut_voice,self.cut_pre)          -- voice, prelevel
   softcut.rec(self.cut_voice,1)                           -- voice, state                     
   softcut.rate_slew_time (self.cut_voice, self.cut_slew)  -- voice, slew time
-  -- softcut.post_filter_bp (self.cut_voice, 1)
-
 end
 
 function sun_mode_1.key(self, n, z)
-
+  --do something when a key is pressed
 end
 
 function sun_mode_1.enc(self, n, delta)
   if n==1 then return end
   sun_mode_1.set_speed(self,delta)
-  
 end
 
--- sets the speed and direction of the photons
--- checks to see if the photon movement should stop
---   due to direction changing
--- then calls set_velocity 
+-- set the speed and direction of the photons
 function sun_mode_1.set_speed(self,delta)
   local input_direction = sign(delta)
+  
+  -- check to see if the photon movement should stop due to direction changing
   if input_direction ~= self.cut_previous_input_direction and self.cut_previous_input_direction ~= 0 then
     -- print("reverse direction")
     if self.motion_clock then
@@ -104,16 +100,19 @@ function sun_mode_1.set_speed(self,delta)
     self.cut_previewing = false
     self.velocity_deltas = {}
     self.reversed = true
-    self.cut_recently_reversed = true
     self.cut_previous_input_direction = input_direction
-
+    
+    -- set cut_recently_reversed to true for 5 seconds
+    self.cut_recently_reversed = true
     clock.run(function()
       clock.sleep(0.5)
       self.cut_recently_reversed = false
     end)
     return
   end
-
+  
+  -- if cut_recently_reversed is true, break out of this code 
+  --   (this prevents velocity from being set)
   if self.cut_recently_reversed then
     -- print("recently reversed")
     return
