@@ -12,6 +12,9 @@ local states = {'r','p','l'}  -- record, play, loop
 -- initialization and deinitialization
 ------------------------------------------
 function sun_mode_2.init(self)
+  print("grain_params_created",self.index,grain_params_created)
+  -- if sun mode 2 is being inited for the first time, create a global variable called `grain_params_created`  
+  if grain_params_created == nil then grain_params_created = false end
   self.reflection_indices = {}
   self.max_cursor = 8 * 16
   self.state = 1  -- 1 = record, 2 = play, 3 = loop
@@ -52,99 +55,129 @@ function sun_mode_2.init(self)
   sun_mode_2.init_sounds(self)
 
   ------------------------------------------
-  -- add params
+  -- add params, but only if they haven't yet been created
   ------------------------------------------
-  -- selecte between live and recorded audio granulation
-  params:add_option("mode","set mode",{"live","recorded"})
-  params:set_action("mode",function(mode) 
-    if mode == 2 then -- granulate an audio file
-      local file = params:get("sample")
-      if file ~= "-" then
-        self.grain_mode = mode
-        engine.sample(1,file)
-      else
-         print("select a file before setting mode to 'recorded'")
-         params:set("mode",1)
-      end
-    elseif mode == 1 then -- granulate live audio
-      self.grain_mode = mode
-      engine.live(1)
+  if not grain_params_created then
+    for sun_ix=1,2 do
+      params:add_separator("grain_params_sun_"..sun_ix,"grain params: sun "..sun_ix)
+      -- select between live and recorded audio granulation
+      params:add_option("grain_mode"..sun_ix,"set grain mode",{"live","recorded"})
+      params:set_action("grain_mode"..sun_ix,function(mode) 
+        if mode == 2 then -- granulate an audio file
+          local file = params:get("sample"..sun_ix)
+          if file ~= "-" then
+            self.grain_mode = mode
+            engine.sample(sun_ix,file)
+          else
+            print("select a file before setting mode to 'recorded'")
+            params:set("grain_mode"..sun_ix,1)
+          end
+        elseif mode == 1 then -- granulate live audio
+          self.grain_mode = mode
+          engine.live(sun_ix)
+        end
+
+      end)
+      
+      -- file selector for recorded audio granulation
+      params:add_file("sample"..sun_ix,"sample")
+      params:set_action("sample"..sun_ix,function(file)
+        if params:get("grain_mode"..sun_ix) == 2 then
+          print("new sample "..sun_ix,file)
+          if file~="-" then
+            engine.sample(sun_ix,file)
+          end
+        end
+      end)
+
+      -- trigger to freeze grains
+      params:add_trigger("freeze_grains"..sun_ix,"freeze grains")
+      params:set_action("freeze_grains"..sun_ix, function()
+        -- to freeze grains we need to:
+        --   set speed and jitter to 0
+        --   for live granulation set pre_level to 1 and rec_level to 0 
+        --   note: if there are reflection recordings running for these, freezing might not exactly happen
+        local speed_reflector            =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"sp")
+        local jitter_reflector           =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"jt")
+        local prerecord_level_reflector  =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"pl")
+        local record_level_reflector     =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"rl")
+        sun_mode_2.update_engine(self, sun_ix, "sp", 64)
+        sun_mode_2.update_engine(self, sun_ix, "jt", 0)
+        sun_mode_2.update_engine(self, sun_ix, "pl", 128) 
+        sun_mode_2.update_engine(self, sun_ix, "rl", 0)
+        clock.run(function() 
+          clock.sleep(0.1)
+          sun_mode_2.set_reflector_cursor(self, speed_reflector           , 64)
+          sun_mode_2.set_reflector_cursor(self, jitter_reflector          , 0)
+          sun_mode_2.set_reflector_cursor(self, prerecord_level_reflector , 128)
+          sun_mode_2.set_reflector_cursor(self, record_level_reflector    , 0)
+        end)
+      end)
+
+      -- trigger to reset the phase of the grain emitter (for syncing with other sounds)
+      params:add_trigger("reset_grain_phase"..sun_ix,"reset grain phase")
+      params:set_action("reset_grain_phase"..sun_ix, function()
+        engine_params = {}
+        local voice = sun_ix 
+        for reflector_location_ix=1,#engine_commands do
+          local reflector_id = self.reflector_locations[reflector_location_ix]
+          local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
+          local engine_val = self.engine_vals[reflector_id]
+          local engine_command_name = engine_command_data[1]
+          engine_params[engine_command_name]=engine_val
+        end
+        engine.reload_grain_player(
+          voice,
+          engine_params["sp"], -- speed
+          engine_params["dn"],
+          engine_params["ps"],
+          engine_params["sz"],
+          engine_params["jt"],
+          engine_params["ge"]
+        )
+      end)
     end
 
-  end)
-  
-  -- file selector for recorded audio granulation
-  params:add_file("sample","sample")
-  params:set_action("sample",function(file)
-    if params:get("mode") == 2 then
-      print("new sample ",file)
-      if file~="-" then
-        engine.sample(1,file)
-      end
-    end
-  end)
-
-  -- trigger to freeze grains
-  params:add_trigger("freeze_grains","freeze grains")
-  params:set_action("freeze_grains", function()
-    -- to freeze grains we need to:
-    --   set speed and jitter to 0
-    --   for live granulation set pre_level to 1 and rec_level to 0 
-    --   note: if there are reflection recordings running for these, freezing might not exactly happen
-    local speed_reflector            =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"sp")
-    local jitter_reflector           =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"jt")
-    local prerecord_level_reflector  =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"pl")
-    local record_level_reflector     =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"rl")
-    sun_mode_2.update_engine(self, 1, "sp", 64)
-    sun_mode_2.update_engine(self, 1, "jt", 0)
-    sun_mode_2.update_engine(self, 1, "pl", 128) 
-    sun_mode_2.update_engine(self, 1, "rl", 0)
-    clock.run(function() 
-      clock.sleep(0.1)
-      sun_mode_2.set_reflector_cursor(self, speed_reflector           , 64)
-      sun_mode_2.set_reflector_cursor(self, jitter_reflector          , 0)
-      sun_mode_2.set_reflector_cursor(self, prerecord_level_reflector , 128)
-      sun_mode_2.set_reflector_cursor(self, record_level_reflector    , 0)
-    end)
-  end)
-
-  -- trigger to reset the phase of the grain emitter (for syncing with other sounds)
-  params:add_trigger("reset_grain_phase","reset grain phase")
-  params:set_action("reset_grain_phase", function()
-    engine_params = {}
-    local voice = 1 -- note: this would need to be changed if we update the code for multiple voices (e.g. one per sun)
-    for reflector_location_ix=1,#engine_commands do
-      local reflector_id = self.reflector_locations[reflector_location_ix]
-      local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
-      local engine_val = self.engine_vals[reflector_id]
-      local engine_command_name = engine_command_data[1]
-      engine_params[engine_command_name]=engine_val
-    end
-    engine.reload_grain_player(
-      voice,
-      engine_params["sp"], -- speed
-      engine_params["dn"],
-      engine_params["ps"],
-      engine_params["sz"],
-      engine_params["jt"],
-      engine_params["ge"]
-    )
-  end)
-
+    -- hide the params for the other sun
+    local other_sun = 3-self.index
+    params:hide("grain_params_sun_"..other_sun)
+    params:hide("grain_mode"..other_sun)
+    params:hide("sample"..other_sun)
+    params:hide("freeze_grains"..other_sun)
+    params:hide("reset_grain_phase"..other_sun)
+    engine.gate(other_sun,0) -- set gate to 0 so grains can't play
+    grain_params_created = true 
+  else 
+    print("unhide grain params",self.index)
+    params:show("grain_params_sun_"..self.index)
+    params:show("grain_mode"..self.index)
+    params:show("sample"..self.index)
+    params:show("freeze_grains"..self.index)
+    params:show("reset_grain_phase"..self.index)
+    engine.gate(self.index,1) -- set gate to 1 so grains can play
+    _menu:rebuild_params()
+  end
   ------------------------------------------
   -- deinit
   -- remove any variables or tables that might stick around
   -- after switching to a different sun mode
   -- for example: a lattice or reflection instance
   ------------------------------------------
-  self.deinit = function()
-    print("deinit sun mode: 2")
+  self.deinit = function(self)
+    print("deinit sun "..self.index .. " mode 2")
+    engine.gate(self.index,0) -- set gate to 1 so grains can play
     self.lattice:stop()
     self.lattice = nil
     for reflector=1,#self.reflectors do
       self.reflectors[reflector]:stop()
       self.reflectors[reflector]:clear()
     end
+    params:hide("grain_params_sun_"..self.index)
+    params:hide("grain_mode"..self.index)
+    params:hide("sample"..self.index)
+    params:hide("freeze_grains"..self.index)
+    params:hide("reset_grain_phase"..self.index)
+    _menu:rebuild_params()
     self.deinit = nil
   end  
 end
@@ -708,6 +741,8 @@ function sun_mode_2.update_engine(self, sc_voice, reflector_id_or_command_name, 
   local mapped_val = sun_mode_2.engine_cmd_range_mapper(engine_command_ranges,value)
   local engine_fn = engine_command_data[2]
   self.engine_vals[reflector_id] = mapped_val
+  
+  -- call the SuperCollider engine command
   engine_fn(sc_voice,mapped_val)
   -- print("update engine (reflector/command/mapped value/original)  ", reflector_id, engine_command_name, mapped_val,value)
 end
@@ -726,7 +761,7 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
     if event_type == "process" then 
       -- update changes triggered by
       --   encoder 3 and/or reflector recordings
-      local sc_voice = 1
+      local sc_voice = sun
       sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
       
     end

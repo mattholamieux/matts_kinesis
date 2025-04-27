@@ -4,7 +4,7 @@
 Engine_Sunshine : CroneEngine {
 // All norns engines follow the 'Engine_MySynthName' convention above
 
-  classvar numVoices = 1;
+  classvar numVoices = 2;
   var pg;
 	var liveRecordingParams;
 	var voiceParams;
@@ -191,7 +191,7 @@ Engine_Sunshine : CroneEngine {
               maxGrains:200,
               mul:0.5
       );     
-      env = EnvGen.kr(Env.asr(1, 1, 1), gate: gate);
+      env = EnvGen.kr(Env.asr(0.5, 0.5, 0), gate: gate);
       LocalOut.kr([grain_trig]);
       Out.kr(phase_out, sig_pos);
       Out.ar(out, [sig * env,sig * env]); 
@@ -284,6 +284,7 @@ Engine_Sunshine : CroneEngine {
       \pos, 0,
       \size, 0.1,
       \jitter, 0,
+      \gate, 1,
       // \buf_win_end, 1,
       // \pitch, 1,
     ]);
@@ -309,7 +310,7 @@ Engine_Sunshine : CroneEngine {
         grainPlayers[voice].set(key,voiceParams[key]);
         // (["set voice param", key, voiceParams[key]]).postln;
         if(key == \size,{
-          (["set size", key, voiceParams[key]]).postln;
+          // (["set size", key, voiceParams[key]]).postln;
           grainSizes[voice] = voiceParams[key]
         })
 			});

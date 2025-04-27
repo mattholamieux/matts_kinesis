@@ -88,6 +88,7 @@ function init()
   --   previously loaded script
   softcut.buffer_clear()
  
+  local redraw_rate = 1/15
   redrawtimer = metro.init(function()
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
@@ -95,7 +96,7 @@ function init()
       redraw()
     end
     prev_norns_menu_status = norns.menu.status()
-  end, 1/15, -1)
+  end, redraw_rate, -1)
 
   clock.run(function()
     --delay starting the redraw timer
@@ -151,7 +152,7 @@ function enc(n, delta)
     suns[sun_index]:enc(n,delta)
   end
 end
-  
+
 function redraw()
   if screen_dirty then 
     screen.clear() 
@@ -165,9 +166,9 @@ function redraw()
   -- draw the sun mode # at the top left of each sun
   screen.level(3)               -- set a brightness level for the screen
   screen.move(2,5)              -- 1st sun: move the screen cursor 
-  screen.text(sun_modes[1])     -- 1st sun: draw the sun's number
+  screen.text("m"..sun_modes[1])     -- 1st sun: draw the sun's number
   screen.move(67,5)             -- 2nd sun: move the screen cursor 
-  screen.text(sun_modes[2])     -- 2nd sun: draw the sun's number
+  screen.text("m"..sun_modes[2])     -- 2nd sun: draw the sun's number
   
   
   screen.level(15)               -- set a brightness level for the screen
@@ -178,3 +179,4 @@ function redraw()
   -- set screen_dirty to false so we only draw when necessary
   screen_dirty = false        
 end
+
