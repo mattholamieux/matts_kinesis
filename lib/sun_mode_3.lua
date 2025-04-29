@@ -13,7 +13,7 @@ function sun_mode_3.init(self)
   self.photon_changed_callback  = sun_mode_3.photon_changed
   self.ray_changed_callback     = sun_mode_3.ray_changed
 
-  -- call update state (defined in `sun.lua`) to
+  -- call update state (defined in sun.lua) to
   self:update_state()
 
   ------------------------------------------

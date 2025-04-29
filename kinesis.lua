@@ -74,16 +74,16 @@ suns = {}
 
 -- there are 4 "modes" 
 --   note: modes 3 & 4 doesn't actually do anything sound-wise by default
---   mode1: (softcut controls) encoder sets a photon's velocity
---   mode2: (supercollider synth controls) uses the reflection library to animate photons in each "ray"
+--   mode1: (softcut controls) encoder sets photon velocity
+--   mode2: (granular synth + reflection lib) each ray controls a different parameter
 --   mode3: (generic) encoder changes the active "photon"
---   mode4: (generic) encoder sets a photon's velocity
-sun_modes = {2, 1} 
+--   mode4: (generic) encoder sets photon velocity
+
+sun_modes = {2, 1} -- by default, set sun 1 to mode 2 and sun 2 to mode 1
 
 function init()
   init_sun(1)
   init_sun(2)
-
   -- clear the softcut buffer in case it was being used by a 
   --   previously loaded script
   softcut.buffer_clear()
@@ -99,8 +99,7 @@ function init()
   end, redraw_rate, -1)
 
   clock.run(function()
-    --delay starting the redraw timer
-    --to give the script time to finish initializing
+    --delay starting the redraw timer to give the script time to finish initializing
     clock.sleep(1)
     redrawtimer:start()
   end)
@@ -108,7 +107,6 @@ end
 
 function init_sun(sun)
   local mode = sun_modes[sun]
-
   if suns[sun] and suns[sun].deinit then suns[sun].deinit(suns[sun]) end
   suns[sun] = Sun:new(sun, mode)
   screen_dirty = true

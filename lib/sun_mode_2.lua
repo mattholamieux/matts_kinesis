@@ -483,7 +483,7 @@ function sun_mode_2.redraw(self)
     local bottom_right_x = (self.index == 1) and 60 or 127
     local bottom_right_y = 62
     screen.move(bottom_right_x, bottom_right_y)
-    screen.rect(bottom_right_x-15, bottom_right_y-5, 18, 8)
+    screen.rect(bottom_right_x-16, bottom_right_y-5, 18, 8)
     screen.level(0)
     screen.fill()
   
@@ -657,14 +657,27 @@ end
 --              updates which engine command. if there are more items in the `engine_commands`
 --              table than there are items in the `reflector_locations` table, the code will break
 sun_mode_2.init_engine_commands = function ()
+  -- the engine_commands table holds data that is used for a number of purposes, including:
+  --    * the labels displayed on the screen for each engine command 
+  --    * the engine commands called by lua and sent to SuperCollider
+  --    * min/max value ranges for each engine command 
+  --    * whether each engine command value should be rounded (and the rounding decimal place)
+  --    * the default value for each engine command (set when sun mode 2 is initialized)
+  --
+  --    for example, the item in the `engine_commands` table defines:
+  --    * "sp" as the screen label 
+  --    * `engine.speed` as the engine command
+  --    *  -5 and 5 as the min/max values that can be sent to the engine for this command
+  --    * rounding is set to true and 0.1 is set as the rounding value
+  --    * the default is set to 1
   engine_commands = {
-    --  abbr     command              range                 default         
+  --abbr.      engine command       range, rounding       default         
     { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
     { "dn",    engine.density,      { 1,40,true },        1         },
     { "ps",    engine.pos,          { 0,1 },              0         },
     { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
     { "jt",    engine.jitter,       { 0,1 },              0         },
-    { "ge",    engine.grain_env,    { 1,6,true,1 },              0         },
+    { "ge",    engine.grain_env,    { 1,6,true,1 },       6         },
     { "rl",    engine.rec_level,    { 0,1,true,0.01 },    1         },
     { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
   --{ "we",    engine.buf_win_end,  { 0.01,1 },           1         },
