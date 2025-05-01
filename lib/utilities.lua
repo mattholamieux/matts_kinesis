@@ -1,6 +1,14 @@
 -- Utility function: get sign
 function sign(x)
-  return x > 0 and 1 or (x < 0 and -1 or 0)
+  local direction
+  if x > 0 then 
+    direction = 1 
+  elseif x < 0 then 
+    direction = -1
+  else 
+    direction = 0     
+  end
+  return direction
 end
 
 -- Utility function: get integer quotient and remainder

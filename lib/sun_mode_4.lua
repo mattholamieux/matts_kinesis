@@ -16,6 +16,11 @@ function sun_mode_4.init(self)
   self.sun_level_base = 10
   self.sun_level = self.sun_level_base
 
+    -- assign callbacks (defined below) to handle events when a photon or ray changes
+  self.photon_changed_callback  = sun_mode_4.photon_changed
+  self.ray_changed_callback     = sun_mode_4.ray_changed
+  
+
   self:update_state()
 
   ------------------------------------------
@@ -155,12 +160,23 @@ function sun_mode_4.draw_sun_pulsing(self)
   self.sun_level = util.clamp(self.sun_level_base + sun_pulse, 0, MAX_LEVEL)
 end
 
+function sun_mode_4.photon_changed(self,ray_id,photon_id)
+  -- do something when the photon changes
+  -- print("photon changed: sun/ray/photon: ",self.index,ray_id,photon_id)
+end
+
+function sun_mode_4.ray_changed(self,ray_id,photon_id)
+  -- do something when the ray changes
+  -- print(">>>ray changed: sun/ray/photon: ",self.index,ray_id,photon_id)
+end
+
+
 function sun_mode_4.redraw(self)
-    if self.sun_pulsing or self.previewing then
-      sun_mode_4.draw_sun_pulsing(self)
-    elseif not self.sun_pulsing then
-      self.sun_level = self.sun_level_base
-    end  
+  if self.sun_pulsing or self.previewing then
+    sun_mode_4.draw_sun_pulsing(self)
+  elseif not self.sun_pulsing then
+    self.sun_level = self.sun_level_base
+  end  
 end
 
 return sun_mode_4

@@ -5,7 +5,7 @@ Ray.__index = Ray
 
 -- constants for photon placement (these could be adjusted as needed)
 local photon_offset_from_center = 3
-local photon_length = 2
+local photon_spacing = 2
 
 function Ray:new(sun_index, ray_index)
   local obj = {
@@ -32,7 +32,7 @@ function Ray:calc_photon_position(photon)
   local center_x = (self.sun_index == 1) and 32 or 96
   local center_y = 32
   local angle = -math.pi/2 + (self.ray_index - 1) * (2 * math.pi / NUM_RAYS)
-  local distance = SUN_RADIUS + photon_offset_from_center + (photon.id - 1) * (photon_length + 1)
+  local distance = SUN_RADIUS + photon_offset_from_center + (photon.id - 1) * (photon_spacing + 1)
   local x = util.round(center_x + distance * math.cos(angle))
   local y = util.round(center_y + distance * math.sin(angle))
   return x, y

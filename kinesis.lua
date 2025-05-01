@@ -4,7 +4,7 @@
 --
 --
 --  this script presents two "suns" made up of "rays" and "photons"
---  each sun operates in a "modes"
+--  each sun operates in one of four "modes"
 --   to change modes: press K1 + K2 (sun 1) or K1 + K3 (sun 2)
 --
 --   mode 1

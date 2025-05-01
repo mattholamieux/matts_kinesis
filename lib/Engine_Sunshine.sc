@@ -177,7 +177,7 @@ Engine_Sunshine : CroneEngine {
               rate:pitch,
               envbufnum:grain_env_buf,
               maxGrains:200,
-              mul:0.5,
+              mul:1,
           ) +
           GrainBuf.ar(
               numChannels: 1, 
@@ -189,7 +189,7 @@ Engine_Sunshine : CroneEngine {
               rate:pitch,
               envbufnum:grain_env_buf,
               maxGrains:200,
-              mul:0.5
+              mul:1
       );     
       env = EnvGen.kr(Env.asr(0.5, 0.5, 0), gate: gate);
       LocalOut.kr([grain_trig]);

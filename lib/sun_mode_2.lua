@@ -49,7 +49,7 @@ function sun_mode_2.init(self)
   sun_mode_2.select_reflector(self, self.selected_ray)
 
   -- initialize the engine commands
-  sun_mode_2.init_engine_commands()
+  sun_mode_2.init_engine_commands(self)
 
   -- initialize sounds
   sun_mode_2.init_sounds(self)
@@ -86,7 +86,10 @@ function sun_mode_2.init(self)
           print("new sample "..sun_ix,file)
           if file~="-" then
             engine.sample(sun_ix,file)
+            print("playing sample", file)
           end
+        else 
+          print("loading sample. set grain mode to `live` to play.", file)
         end
       end)
 
@@ -157,6 +160,14 @@ function sun_mode_2.init(self)
     engine.gate(self.index,1) -- set gate to 1 so grains can play
     _menu:rebuild_params()
   end
+
+  -- switch to granulate an audio file by default
+  -- note: a file path will look something like: `/home/we/dust/audio/my_file.wav`
+  -- params:set("sample"..self.index, "<ADD A FILE PATH>")  
+  params:set("sample"..self.index, "/home/we/dust/cc2_flora-1.wav")  
+  params:set("grain_mode"..self.index, 2)  
+
+
   ------------------------------------------
   -- deinit
   -- remove any variables or tables that might stick around
@@ -656,7 +667,7 @@ end
 --   IMPORTANT: the order of the engine commands sets which sun ray/reflector 
 --              updates which engine command. if there are more items in the `engine_commands`
 --              table than there are items in the `reflector_locations` table, the code will break
-sun_mode_2.init_engine_commands = function ()
+sun_mode_2.init_engine_commands = function (self)
   -- the engine_commands table holds data that is used for a number of purposes, including:
   --    * the labels displayed on the screen for each engine command 
   --    * the engine commands called by lua and sent to SuperCollider
@@ -682,6 +693,16 @@ sun_mode_2.init_engine_commands = function ()
     { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
   --{ "we",    engine.buf_win_end,  { 0.01,1 },           1         },
   }
+
+  -- update the engine with the default settings for each engine command
+  local voice = self.index
+  for ix=1,#engine_commands do
+    local command_abbr = engine_commands[ix][1]
+    local command = engine_commands[ix][2]
+    local default = engine_commands[ix][4]
+    print("init command", command_abbr, default)
+    command(voice,default)
+  end
 end
 
 sun_mode_2.engine_cmd_range_mapper = function (range_data,value)

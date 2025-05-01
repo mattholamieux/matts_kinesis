@@ -30,16 +30,6 @@ function sun_mode_3.init(self)
 
 end
 
-function sun_mode_3.photon_changed(self,ray_id,photon_id)
-  -- do something when the photon changes
-  -- print("photon changed",self.index,ray_id,photon_id)
-end
-
-function sun_mode_3.ray_changed(self,ray_id,photon_id)
-  -- do something when the ray changes
-  -- print("ray changed",self.index,ray_id,photon_id)
-end
-
 function sun_mode_3.enc(self, n, delta)
   if n==1 then return end
   self:set_active_photons_rel(delta)
@@ -48,6 +38,17 @@ end
 function sun_mode_3.key(self, n, z)
   -- do something when a key is pressed
 end
+
+function sun_mode_3.photon_changed(self,ray_id,photon_id)
+  -- do something when the photon changes
+  -- print("photon changed: sun/ray/photon: ",self.index,ray_id,photon_id)
+end
+
+function sun_mode_3.ray_changed(self,ray_id,photon_id)
+  -- do something when the ray changes
+  -- print(">>>ray changed: sun/ray/photon: ",self.index,ray_id,photon_id)
+end
+
 
 
 function sun_mode_3.redraw(self)

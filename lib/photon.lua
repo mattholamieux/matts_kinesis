@@ -2,7 +2,7 @@
 local Photon = {}
 Photon.__index = Photon
 
-local photon_length = 2    -- used for drawing
+local photon_size = 2    -- used for drawing
 
 ---------------------------------------------------------------------
 -- constructor
@@ -39,7 +39,7 @@ function Photon:redraw(force_redraw)
   -- print("redraw photon", self.id,force_redraw)
   screen.level(self.brightness)
   screen.move(self.x, self.y)
-  screen.circle(self.x, self.y, photon_length / 2)
+  screen.circle(self.x, self.y, photon_size / 2)
   screen.fill()
   self.last_drawn_brightness = self.brightness
 end

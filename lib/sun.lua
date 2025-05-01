@@ -171,8 +171,8 @@ function Sun:set_velocity_manual(new_velocity)
   self.direction = sign(new_velocity)
 
   if math.abs(new_velocity) < 0.01 then
-  self.velocity = 0
-  self.direction = 0
+    self.velocity = 0
+    self.direction = 0
   return
   end
 

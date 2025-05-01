@@ -211,8 +211,9 @@ end
 
 -- if a new ray has been highlighted do someting
 function sun_mode_1.ray_changed(self,ray_id,photon_id)
+  -- print("ray_changed in mode 1",self.index,ray_id,photon_id)
   if ray_id%2 == 0 then
-    self.cut_rate = self.cut_rate == 1 and 2 or 1 
+    self.cut_rate = self.cut_rate == 1 and math.random()*5 or 1 
     softcut.rate(self.cut_voice,self.cut_rate)
   end
 end
