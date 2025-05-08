@@ -1,4 +1,4 @@
--- kinesis (gestures): bUIlt for the habitus workshop
+-- kinesis (gestures): built for the habitus workshop
 -- 0.1 @jaseknighter
 -- l.llllllll.co/<insert link to lines thread>
 --
