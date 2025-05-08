@@ -1,4 +1,4 @@
--- kinesis (gestures): bUIlt for the habitus workshop
+-- kinesis (gestures): built for the habitus workshop
 -- 0.1 @jaseknighter
 -- l.llllllll.co/<insert link to lines thread>
 --
@@ -6,7 +6,7 @@
 -- Some notes about learning from this code:
 --   Lines starting with "--" are comments, they don't get executed
 --   Most comments help explain the code, but also:
---     Find the -- [[ 0_0 ]] -- for good places to edit
+--     Find the -- [[ 0_0 ]] -- for good places to change the code
 --
 -- This script has a UI build around the idea of two "suns" made up of "rays" and "photons"
 --
@@ -26,32 +26,6 @@
 --   Mode 4
 --     Sound behavior:  Nothing by default. Up to you to define.
 --     UI behavior:     Same as Mode 1
-
----------------------------------------------------
--- Todo: 
--- Fix code so redraw timer doesn't have to constantly set screen_dirty to true
--- consider updating each sun mode's init func so it sets state details in a unique table
---   (e.g. `suns[sun_id][mode_id]`)
--- For sun 2 (granular voice):
---   Finish setting up the mode to send granulate a recording
---   Add a param to switch between live and recorded mode
---   Should we create two voices (one for each sun)? (if we do, fix references to `sc_voice` in the lua code)
---   Update the sun brightness to reflect the position of the 
---     GrainBuf playhead
--- Add the -- [[ 0_0 ]] -- for good places to edit!
--- Add some tables that would be good to explore from the repl with for...in loops
---    For example: suns[1].reflector locations and suns[1].reflectors
--- Add "ideas for experimenting for each sun" (maybe label as "beginner", "intermediate", "advanced"? or maybe just include beginner ideas since more experienced folks should be able to come up with their own ideas for experimenting?)
---   For example: 
---     Move the engine_commands table into the scope of `self` so you can have two granular synths running together that execute different engine commands
---     Switch rec and pre levels for the live recording
---     Add panning
---     Freeze grains param (perhaps remove this from the final code 
---       so it can be an exercize?)
---     Uncomment out a print/postln/poll statement and see what it looks like (idea: number the print/postln/poll statements to provide a sort of breadcrumb path into the code)
---       good locations to do this:
---          sun_mode_2.update_engine: print("update engine", engine_fn_name, mapped_val)
----------------------------------------------------
 
 -- load norns modules
 lattice = require("lattice")
