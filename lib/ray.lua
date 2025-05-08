@@ -1,38 +1,35 @@
--- lib/ray.lua
 local Photon = include "lib/photon"
+
 local Ray = {}
 Ray.__index = Ray
 
--- constants for photon placement (these could be adjusted as needed)
-local photon_offset_from_center = 3
-local photon_spacing = 2
+-- Constants for photon placement (these could be adjusted as needed)
+local PHOTON_OFFSET = 3
+local PHOTON_SPACING = 2
 
 function Ray:new(sun_index, ray_index)
-  local obj = {
+  local ray_obj = {
     sun_index = sun_index,
     ray_index = ray_index,
     photons = {},
-    -- NUM_RAYS = NUM_RAYS,
-    -- PHOTONS_PER_RAY = PHOTONS_PER_RAY,
-    -- SUN_RADIUS = SUN_RADIUS,
   }
-  setmetatable(obj, Ray)
+  setmetatable(ray_obj, Ray)
 
-  -- instantiate the photons using the new Photon class (only id is passed)
+  -- Instantiate the photons using the new Photon class (only id is passed)
   for i=1, PHOTONS_PER_RAY do
-    obj.photons[i] = Photon:new(i)
-    obj.photons[i]:set_brightness(MIN_LEVEL)  -- default brightness (MIN_LEVEL)
+    ray_obj.photons[i] = Photon:new(i)
+    ray_obj.photons[i]:set_brightness(min_level)  -- default brightness (min_level)
   end
 
-  return obj
+  return ray_obj
 end
 
--- helper: calculate photon position based on the ray’s parameters and photon id.
+-- Helper: calculate photon position based on the ray’s parameters and photon id.
 function Ray:calc_photon_position(photon)
   local center_x = (self.sun_index == 1) and 32 or 96
   local center_y = 32
   local angle = -math.pi/2 + (self.ray_index - 1) * (2 * math.pi / NUM_RAYS)
-  local distance = SUN_RADIUS + photon_offset_from_center + (photon.id - 1) * (photon_spacing + 1)
+  local distance = SUN_RADIUS + PHOTON_OFFSET + (photon.id - 1) * (PHOTON_SPACING + 1)
   local x = util.round(center_x + distance * math.cos(angle))
   local y = util.round(center_y + distance * math.sin(angle))
   return x, y
@@ -42,24 +39,21 @@ function Ray:get_photon(i)
   return self.photons[i]
 end
 
--- morph a photon's brightness over time 
--- (see Photon:morph_photon for details)
+-- Morph a photon's brightness over time 
 function Ray:morph_photon(photon_id, s_val, f_val, duration, steps, shape, callback, caller_id)
   local ph = self:get_photon(photon_id)
-  print("start morph",photon_id, s_val, f_val, duration, steps, shape, callback, caller_id)
+  -- print("start morph",photon_id, s_val, f_val, duration, steps, shape, callback, caller_id)
   ph:morph_photon(s_val, f_val, duration, steps, shape, callback, caller_id)
 end 
 
--- Adjusted to simply set brightness on the photon
-function Ray:set_photon(i, level)
+function Ray:set_photon_brightness(i, level)
   local p = self.photons[i]
   p:set_brightness(level)
 end
 
--- Clear the state (only brightness now; removed activation flags)
-function Ray:clear_state(MIN_LEVEL)
+function Ray:clear_state(min_level)
   for _, p in ipairs(self.photons) do
-    p:set_brightness(MIN_LEVEL)
+    p:set_brightness(min_level)
   end
 end
 

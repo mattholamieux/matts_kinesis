@@ -1,8 +1,10 @@
--- lib/sun_mode_4.lua
 local sun_mode_4 = {}
 
+------------------------------------------
+-- Initialization and deinitialization
+------------------------------------------
 function sun_mode_4.init(self)
-  --set variables needed for mode 4 code
+  -- Set variables needed for mode 4 code
   self.active_photons = {1}
   self.wait_clock = nil
   self.velocity_deltas = {}
@@ -12,31 +14,27 @@ function sun_mode_4.init(self)
   self.previous_input_direction = 0
   self.reversed = false
   self.recently_reversed = false
-  self.previewing = false
+  self.preview_speed = false
   self.sun_level_base = 10
   self.sun_level = self.sun_level_base
 
-    -- assign callbacks (defined below) to handle events when a photon or ray changes
+  -- Assign callbacks (defined below) to handle events when a photon or ray changes
   self.photon_changed_callback  = sun_mode_4.photon_changed
   self.ray_changed_callback     = sun_mode_4.ray_changed
   
 
   self:update_state()
 
-  ------------------------------------------
-  -- deinit
-  -- remove any variables or tables that might stick around
-  -- after switching to a different sun mode
-  -- for example: a lattice or reflection instance
-  ------------------------------------------
+  -- Deinit (cleanup) function
   self.deinit = function()
     print("deinit sun mode: 4")
   end  
 
 end
 
+-- [[ 0_0 ]] --
 function sun_mode_4.key(self, n, z)
-
+  -- Do something when a key is pressed
 end
 
 function sun_mode_4.enc(self, n, delta)
@@ -45,10 +43,9 @@ function sun_mode_4.enc(self, n, delta)
   
 end
 
--- sets the speed and direction of the photons
--- checks to see if the photon movement should stop
---   due to direction changing
--- then calls set_velocity 
+-- Sets the speed and direction of the photons
+-- Checks to see if the photon movement should stop due to direction changing
+-- Then calls set_velocity 
 function sun_mode_4.set_speed(self,delta)
   local input_direction = sign(delta)
   if input_direction ~= self.previous_input_direction and self.previous_input_direction ~= 0 then
@@ -65,7 +62,7 @@ function sun_mode_4.set_speed(self,delta)
     self.velocity = 0
     self.direction = 0
     self.sun_pulsing = false
-    self.previewing = false
+    self.preview_speed = false
     self.velocity_deltas = {}
     self.reversed = true
     self.recently_reversed = true
@@ -96,7 +93,7 @@ function sun_mode_4.set_velocity(self,delta)
     local now = util.time()
     table.insert(self.velocity_deltas, {delta = delta, time = now})
   
-    self.previewing = true
+    self.preview_speed = true
     self.sun_pulsing = true
   
     if #self.velocity_deltas >= 2 then
@@ -114,7 +111,7 @@ function sun_mode_4.set_velocity(self,delta)
     self.wait_clock = clock.run(function()
       clock.sleep(0.5)
       if #self.velocity_deltas == 0 then
-        self.previewing = false
+        self.preview_speed = false
         return
       end
   
@@ -128,7 +125,7 @@ function sun_mode_4.set_velocity(self,delta)
   
       self.velocity_deltas = {}
       self.wait_clock = nil
-      self.previewing = false
+      self.preview_speed = false
   
       if math.abs(new_velocity) < 0.01 then
         self.velocity = 0
@@ -160,23 +157,26 @@ function sun_mode_4.draw_sun_pulsing(self)
   self.sun_level = util.clamp(self.sun_level_base + sun_pulse, 0, MAX_LEVEL)
 end
 
+-- [[ 0_0 ]] --
 function sun_mode_4.photon_changed(self,ray_id,photon_id)
-  -- do something when the photon changes
+  -- Do something when the photon changes
   -- print("photon changed: sun/ray/photon: ",self.index,ray_id,photon_id)
 end
 
+-- [[ 0_0 ]] --
 function sun_mode_4.ray_changed(self,ray_id,photon_id)
-  -- do something when the ray changes
+  -- Do something when the ray changes
   -- print(">>>ray changed: sun/ray/photon: ",self.index,ray_id,photon_id)
 end
 
-
+-- [[ 0_0 ]] --
 function sun_mode_4.redraw(self)
-  if self.sun_pulsing or self.previewing then
+  if self.sun_pulsing or self.preview_speed then
     sun_mode_4.draw_sun_pulsing(self)
   elseif not self.sun_pulsing then
     self.sun_level = self.sun_level_base
   end  
+    -- Draw something here specific to sun mode 4
 end
 
 return sun_mode_4

@@ -11,10 +11,17 @@ function sign(x)
   return direction
 end
 
--- Utility function: get integer quotient and remainder
-function quotient_remainder(numerator,denominator)
-  local integer_quotient = math.floor(numerator/denominator)
-  local remainder = (numerator-(integer_quotient*denominator))/denominator
+-- Utility function: get integer quotient and remainder from a division operation
+-- For example: `quotient_remainder(5,2)` returns `2,0.5`
+--              because 5/2 = 2.5, so 2 is the quotient and 0.5 is the remainder
+function quotient_remainder(dividend,divisor)
+  local integer_quotient 
+  if dividend/divisor > 0 then 
+    integer_quotient = math.floor(dividend/divisor) 
+  else
+    integer_quotient = math.ceil(dividend/divisor)
+  end
+  local remainder = (dividend-(integer_quotient*divisor))/divisor
   return integer_quotient, remainder
 end
 
@@ -49,7 +56,7 @@ end
 function morph(self, s_val, f_val, duration, steps, shape, callback, caller_id, steps_remaining, current_val)
   -- Instead of immediately canceling, check for cancellation and accelerate the process.
   local accel_factor = 0.5  -- adjust this factor to increase speed when cancelled.
-  if self.cancel_morph then
+  if self and self.cancel_morph then
     -- Scale down the remaining duration and steps.
     duration = duration * accel_factor
     steps = math.floor(math.max(1, math.ceil(steps * accel_factor)))
@@ -113,5 +120,4 @@ function morph(self, s_val, f_val, duration, steps, shape, callback, caller_id, 
     morph(self, s_val, f_val, duration, steps, shape, callback, caller_id, steps_remaining, next_val)
     end)
   end
-  end
-  
+end

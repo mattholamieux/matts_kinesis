@@ -1,30 +1,29 @@
--- lib/photon.lua
 local Photon = {}
 Photon.__index = Photon
 
-local photon_size = 2    -- used for drawing
+local PHOTON_SIZE = 2    
 
 ---------------------------------------------------------------------
--- constructor
+-- Constructor
 ---------------------------------------------------------------------
 function Photon:new(id)
   local obj = {
-    id = id,                       -- identifier (e.g., photon index)
-    brightness = 2,                -- current brightness
-    last_drawn_brightness = nil,   -- for change detection
+    id = id,                       -- Identifier (e.g., photon index)
+    brightness = 2,                -- Current brightness
+    last_drawn_brightness = nil,   -- For change detection
     x = 0,
     y = 0,
-    external_callback = nil,       -- the callback provided by the caller
-    morphing = false,              -- whether a morph is active
-    cancel_morph = false,          -- flag to cancel/accelerate an active morph
-    active_morph_caller = nil      -- stores the caller_id for the active morph
+    external_callback = nil,       -- The callback provided by the caller
+    morphing = false,              -- Whether a morph is active
+    cancel_morph = false,          -- Flag to cancel/accelerate an active morph
+    active_morph_caller = nil      -- Stores the caller_id for the active morph
   }
   setmetatable(obj, Photon)
   return obj
 end
 
 ---------------------------------------------------------------------
--- basic drawing methods
+-- Basic drawing methods
 ---------------------------------------------------------------------
 function Photon:set_brightness(level)
   self.brightness = math.floor(level)
@@ -39,7 +38,7 @@ function Photon:redraw(force_redraw)
   -- print("redraw photon", self.id,force_redraw)
   screen.level(self.brightness)
   screen.move(self.x, self.y)
-  screen.circle(self.x, self.y, photon_size / 2)
+  screen.circle(self.x, self.y, PHOTON_SIZE / 2)
   screen.fill()
   self.last_drawn_brightness = self.brightness
 end
@@ -51,9 +50,9 @@ end
 ---------------------------------------------------------------------
 -- Public wrapper: morph_photon
 --
--- This method begins a morph operation on the photon. If a morph is already
--- in progress and the new morph's caller_id is different, the current morph is
--- accelerated (by canceling it) and the new morph starts with a shorter duration.
+-- This method begins a morph operation on the photon. 
+-- If a morph is already in progress and the new morph's caller_id is different, 
+--   the current morph is accelerated (by canceling it) and the new morph starts with a shorter duration.
 --
 -- Parameters:
 --   s_val, f_val  - start and finish brightness values
@@ -67,7 +66,7 @@ function Photon:morph_photon(s_val, f_val, duration, steps, shape, callback, cal
   caller_id = caller_id or 1
   if self.morphing then -- IS THIS CODE ACTUALLY NECESSARY???
     if self.active_morph_caller ~= caller_id then
-      print("Photon " .. self.id .. ": new morph (caller " .. caller_id .. ") differs from active context (" .. tostring(self.active_morph_caller) .. "), cancelling current morph.")
+      -- print("Photon " .. self.id .. ": new morph (caller " .. caller_id .. ") differs from active context (" .. tostring(self.active_morph_caller) .. "), cancelling current morph.")
       self:cancel_morphing()
       local new_duration = duration * 0.3  -- accelerate the morph (30% of original time)
       local new_steps = math.max(1, math.ceil(steps * 0.3))

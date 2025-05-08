@@ -1,11 +1,16 @@
-// based on the moonshine and eglut (latkes) engines
+// The Sunshine engine is based on the Moonshine and eglut (latkes) engines
 //    moonshine: https://monome.org/docs/norns/engine-study-1/
 //    latkes: https://github.com/jaseknighter/latkes
+
+//  A note about writing comments in code...
+//    While there are tons of comments in the kinesis codebase, 
+//      just to make something clear that isn't obvious from reading the code.
+//    Well-written code should be generally understandable without comments, making code organization and naming very important.
 Engine_Sunshine : CroneEngine {
 // All norns engines follow the 'Engine_MySynthName' convention above
 
-  classvar numVoices = 2;
-  var pg;
+  classvar numVoices = 2;       // A classvar variable's value is shared by all instances of a class
+  var pg;                       // A var variable's value is unique to each instance of a class (aka "object")
 	var liveRecordingParams;
 	var voiceParams;
   var fileBuffers;
@@ -18,12 +23,16 @@ Engine_Sunshine : CroneEngine {
   var updatingBuffers = false;
   var grainSizes;
 
-	*new { arg context,doneCallback;
-		^super.new(context,doneCallback);
+  // Putting an asterix (*) before a function name attaches the function to the class
+  //   In this case, `*new` creates a new instance of the Sunshine class.
+	*new { arg context,doneCallback; 
+		^super.new(context,doneCallback); // a caret (^) indicates code that gets returned from a function
 	}
 
-
-  readDisk { | voice, path, sampleStart, sampleLength |
+  // Variables in brackets at the start of a method act as arguments (aka parameters)
+  //   Alternatively, arguments can be written like `readDisk { arg voice, path, sampleStart, SampleLength;`
+  //   see: https://doc.sccode.org/Reference/Functions.html 
+  readDisk { | voice, path, sampleStart, sampleLength | 
     if (path.notNil, {
       var soundFile, duration, newBuf;
       soundFile = SoundFile.new;
@@ -33,8 +42,8 @@ Engine_Sunshine : CroneEngine {
       ["file read into buffer...soundfile duration,sampleStart, sampleLength",duration,sampleStart,sampleLength].postln;
       newBuf = Buffer.readChannel(context.server, path, channels:[0], action: {
         arg buf;
-        fileBuffers[voice].zero; // clear the file buffer
-        buf.copyData(fileBuffers[voice]); //copy the audio into the fileBuffer 
+        fileBuffers[voice].zero;            // Clear the file buffer
+        buf.copyData(fileBuffers[voice]);   // Copy the audio into the fileBuffer 
         grainPlayers[voice].set(
           \buf, fileBuffers[voice],
           \buf_win_start, (sampleStart/maxBufferLength),
@@ -42,33 +51,26 @@ Engine_Sunshine : CroneEngine {
         );
       });
     },{
-      //if path is nil, assume the file_buffers array already has the buffer
-      //and it just needs to be set to the grainPlayers
+      // If path is nil, assume the file_buffers array already has the buffer
+      //   and it just needs to be set to the grainPlayers
       grainPlayers[voice].set(\buf, fileBuffers[voice]);
     });
   }
 
-	alloc { // allocate memory to the following:
-    // server=context.server;
-
-    // define functions used to setup audio sent to the Sunshine SynthDef
-  
-    // function to read recorded audio into a buffer
-    // note: the pipes (|) are used to define arguments
-    //       "argements" in sc are variables that can be set
-    //         by calling the function (or UGen).
-    
-    // create the buffer(s) for recorded audio
-    // note: by default, only one buffer will be created
-    //       because by default, the engine only uses one mono voice
+  // This method is called to allocate resources that will run on the SC server (e.g. buffers, SynthDefs, and arrays)
+	alloc {     
+    // Create the buffer(s) for recorded audio
+    // Note: by default, only one buffer will be created because by default, the engine only uses one mono voice
     fileBuffers = Array.fill(numVoices, { arg i;
       Buffer.alloc(context.server,context.server.sampleRate * maxBufferLength);
     });
-    // create the live buffer(s) for live audio
+
+    // Create the live buffer(s) for live audio
     liveBuffers = Array.fill(numVoices, { arg i;
       Buffer.alloc(context.server,context.server.sampleRate * maxBufferLength,1);
     });
-    // create buffers to hold grain envelopes
+
+    // Create buffers to hold grain envelopes
     grainEnvBuffers = Array.fill(numVoices, { arg i; 
       var winenv = Env([0, 1, 0], [0.5, 0.5], [\wel, \wel]);
       Buffer.sendCollection(context.server, winenv.discretize, 1);
@@ -79,13 +81,12 @@ Engine_Sunshine : CroneEngine {
     phases = Array.fill(numVoices, { | i | Bus.control(context.server); });
     grainSizes = Array.fill(numVoices, { | i | 0.1; });
 
-    //pause the code at this point to wait for the buffers to be allocated
+    // Pause the code at this point to wait for the buffers to be allocated
     context.server.sync;
 
-		// add SynthDefs
+		// Add SynthDefs
 		SynthDef(\live_recorder, { 
-      | in = 0, //define the args
-        buf = 0, 
+      | buf = 0, // Define the arguments 
         rate = 1, 
         pos = 0, 
         reset_pos = 1,
@@ -94,11 +95,12 @@ Engine_Sunshine : CroneEngine {
         rec_level = 1,
         pre_level = 0
       | 
+
       var buf_dur = BufDur.ir(buf);
       var buf_pos = Phasor.kr(trig: reset_pos,
                 rate: buf_dur.reciprocal / ControlRate.ir * rate,
                 start:buf_win_start, end:buf_win_end, resetPos: buf_win_start);
-      var sig = SoundIn.ar(in);
+      var sig = SoundIn.ar([0,1]);
       var recording_offset = buf_win_start*maxBufferLength*SampleRate.ir;
       var rec_buf_reset = Impulse.kr(
         freq:((buf_win_end-buf_win_start)*maxBufferLength).reciprocal,
@@ -106,18 +108,19 @@ Engine_Sunshine : CroneEngine {
       );
       var testsnd;
 
+      sig = Mix.ar(sig); // mix the signal to a single channel
       RecordBuf.ar(sig, buf, offset: recording_offset, 
         recLevel: rec_level, preLevel: pre_level, run: 1.0, loop: 1.0, 
         trigger: rec_buf_reset, doneAction: 0);
 
-      // --[[ 0_0 ]]
-      // -- uncomment to confirm the live buffer is recording
+      // -- [[ 0_0 ]] --
+      // Uncomment to confirm the live buffer is recording
       // testsnd = PlayBuf.ar(1, bufnum: buf, rate: 1.0, trigger: 1.0, startPos: 0.0, loop: 1.0, doneAction: 0);
       // Out.ar(0,testsnd);
     }).add;
 
 		SynthDef(\grain_player, { 
-      | voice, buf, out, phase_out //define the args
+      | voice, buf, out, phase_out //Define the arguments
         gate = 1, 
         pos = 0, reset_pos = 0,
         buf_win_start = 0, buf_win_end = 1,
@@ -135,14 +138,11 @@ Engine_Sunshine : CroneEngine {
       var grain_trig = 1;
       var reset_grain_trig = localin[0];
       var buf_dur = BufDur.ir(buf);
-      // var out_of_window_trig = localin[1];
-
+      
       pos = pos.linlin(0,1,buf_win_start,buf_win_end);
 
-      //note: see the save_last_position OSCdef below
-      //      which moves the player to a new position 
-      //      if the engine receives a new engine.pos command 
-      //      from the lua script
+      // Note: see the save_last_position OSCdef below which moves the player to a new position 
+      //       If the engine receives a new engine.pos command from the lua script
       SendReply.kr(Impulse.kr(10), "/save_last_position", [voice,pos]);
 
       win_size = buf_win_end - buf_win_start - (size / maxBufferLength);
@@ -164,7 +164,7 @@ Engine_Sunshine : CroneEngine {
 
       sig_pos = buf_pos;
       
-      // add jitter to each signal position
+      // Add jitter to each signal position
       sig_pos = (sig_pos+jitter_sig).wrap(buf_win_start,buf_win_end);
       
       sig = GrainBuf.ar(
@@ -199,7 +199,7 @@ Engine_Sunshine : CroneEngine {
 
     context.server.sync;
 
-    // add OSC functions called by the grain_player
+    // Add OSC functions called by the grain_player
     OSCdef(\osc_def_1, {|msg| 
       var voice = msg[3].asInteger;
       var position = msg[4].asFloat;
@@ -215,22 +215,21 @@ Engine_Sunshine : CroneEngine {
     OSCdef(\osc_def_2, {|msg| 
       var voice = msg[3].asInteger;
       // (["grain phase completed",voice]).postln;
-      // if (density_phase == 1, { /*do something here*/ });
+      // If (density_phase == 1, { /*do something here*/ });
     }, "/density_phase_completed");
 
-    // create arrays to hold recorder and grain players synthdefs
+    // Create arrays to hold recorder and grain players synthdefs
     recorders  = Array.newClear(numVoices);
     grainPlayers     = Array.newClear(numVoices);
     
-    // create a group to hold the synthdef arrays
+    // Create a group to hold the synthdef arrays
     pg = ParGroup.head(context.xg);
 
-    //instantiate the live recorder(s) and grain voice(s)
+    // Instantiate the live recorder(s) and grain voice(s)
     numVoices.do({ | i |
       recorders.put(i,
           Synth.tail(pg,\live_recorder, [
               \buf,liveBuffers[i],
-              \in,0,
           ])
       );
       grainPlayers.put(i,
@@ -249,7 +248,7 @@ Engine_Sunshine : CroneEngine {
     this.addCommand("live", "i", { arg msg;
       var voice = msg[1] - 1;
       var buf_array_ix;
-      voiceModes[voice] = 0; // set mode to 1: live mode
+      voiceModes[voice] = 0; // Set mode to 1: live mode
       grainPlayers[voice].set(
         \buf, liveBuffers[voice],
       );
@@ -261,7 +260,7 @@ Engine_Sunshine : CroneEngine {
         var sample_start = 0;
         var sample_length = maxBufferLength*60;
         var bpath = fileBuffers[voice].path;
-        voiceModes[voice] = 1; // set mode to 1: sample mode
+        voiceModes[voice] = 1; //Sset mode to 1: sample mode
         if((bpath.notNil).and(bpath == path),{
             (["file already loaded",path]).postln;
             this.readDisk(voice,nil,sample_start,sample_length);
@@ -271,7 +270,7 @@ Engine_Sunshine : CroneEngine {
         });
     });
 
-    // let's create a Dictionary (an unordered associative collection)
+    // Let's create a Dictionary (an unordered associative collection)
     //   to store parameter values, initialized to defaults.
 		liveRecordingParams = Dictionary.newFrom([
 			\rec_level, 1,
@@ -342,7 +341,7 @@ Engine_Sunshine : CroneEngine {
                       grainEnvBuffers[voice] = buf;
                       updatingBuffers = false;
                       (["new env",curve_types[shape]]).postln;
-                      10.wait; //wait 10 seconds to free the old buf in case it is in use.
+                      10.wait; // Wait 10 seconds to free the old buf in case it is in use.
                       oldbuf.free;
                   }).play;
               });

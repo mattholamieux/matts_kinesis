@@ -1,7 +1,7 @@
--- lib/sun_mode_2.lua 
--- granulator
--- this mode uses the reflection library
--- Reference: https://monome.org/docs/norns/reference/lib/reflection
+-- Sun mode 2: granular synthesis using the GrainBuf UGen, controlled with the reflection library
+-- References: 
+--   https://monome.org/docs/norns/reference/lib/reflection
+--   https://doc.sccode.org/Classes/GrainBuf.html 
 
 sun_mode_2 = {}
 
@@ -9,25 +9,26 @@ sun_mode_2 = {}
 local states = {'r','p','l'}  -- record, play, loop
 
 ------------------------------------------
--- initialization and deinitialization
+-- Initialization and deinitialization
 ------------------------------------------
 function sun_mode_2.init(self)
   print("grain_params_created",self.index,grain_params_created)
-  -- if sun mode 2 is being inited for the first time, create a global variable called `grain_params_created`  
+  -- If sun mode 2 is being inited for the first time, create a global variable called `grain_params_created`  
   if grain_params_created == nil then grain_params_created = false end
+  
   self.reflection_indices = {}
   self.max_cursor = 8 * 16
-  self.state = 1  -- 1 = record, 2 = play, 3 = loop
-  self.grain_mode = 1 -- 1 = granulate live audio, 2 = granulate an audio file
+  self.state = 1  -- States: 1 = record, 2 = play, 3 = loop
+  self.grain_mode = 1 -- Grain modes: 1 = granulate live audio, 2 = granulate an audio file
   
-  -- set which rays have reflectors
+  -- Set which rays have reflectors
   if self.index == 1 then
     self.reflector_locations = {1,3,5,7,9,11,13,15}
   else
-    self.reflector_locations = {2,4,6,8,10,12,14,16}
+    self.reflector_locations = {1,3,5,7,9,11,13,15}
   end
 
-  -- initialize state tables
+  -- Initialize state tables
   self.record       = {}
   self.play         = {}
   self.loop         = {}
@@ -43,19 +44,20 @@ function sun_mode_2.init(self)
 
   sun_mode_2.init_reflectors(self)
   sun_mode_2.hide_non_reflector_rays(self)
-  
-  -- make the 2nd reflector selected by default
+
+  -- 0_0 -- Make the 2nd reflector selected by default
   self.selected_ray = self.reflector_locations[2]
+
   sun_mode_2.select_reflector(self, self.selected_ray)
 
-  -- initialize the engine commands
+  -- Initialize the engine commands
   sun_mode_2.init_engine_commands(self)
 
-  -- initialize sounds
+  -- Initialize sounds
   sun_mode_2.init_sounds(self)
 
   ------------------------------------------
-  -- add params, but only if they haven't yet been created
+  -- Add params, but only if they haven't yet been created
   ------------------------------------------
   if not grain_params_created then
     for sun_ix=1,2 do
@@ -63,7 +65,7 @@ function sun_mode_2.init(self)
       -- select between live and recorded audio granulation
       params:add_option("grain_mode"..sun_ix,"set grain mode",{"live","recorded"})
       params:set_action("grain_mode"..sun_ix,function(mode) 
-        if mode == 2 then -- granulate an audio file
+        if mode == 2 then -- Granulate an audio file
           local file = params:get("sample"..sun_ix)
           if file ~= "-" then
             self.grain_mode = mode
@@ -72,14 +74,14 @@ function sun_mode_2.init(self)
             print("select a file before setting mode to 'recorded'")
             params:set("grain_mode"..sun_ix,1)
           end
-        elseif mode == 1 then -- granulate live audio
+        elseif mode == 1 then -- Granulate live audio
           self.grain_mode = mode
           engine.live(sun_ix)
         end
 
       end)
       
-      -- file selector for recorded audio granulation
+      -- File selector for recorded audio granulation
       params:add_file("sample"..sun_ix,"sample")
       params:set_action("sample"..sun_ix,function(file)
         if params:get("grain_mode"..sun_ix) == 2 then
@@ -93,13 +95,13 @@ function sun_mode_2.init(self)
         end
       end)
 
-      -- trigger to freeze grains
+      -- Trigger to freeze grains
       params:add_trigger("freeze_grains"..sun_ix,"freeze grains")
       params:set_action("freeze_grains"..sun_ix, function()
-        -- to freeze grains we need to:
-        --   set speed and jitter to 0
-        --   for live granulation set pre_level to 1 and rec_level to 0 
-        --   note: if there are reflection recordings running for these, freezing might not exactly happen
+        -- To freeze grains we need to:
+        --   Set speed and jitter to 0
+        --   For live granulation set pre_level to 1 and rec_level to 0 
+        --   Note: if there are reflection recordings running for these, freezing might not exactly happen
         local speed_reflector            =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"sp")
         local jitter_reflector           =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"jt")
         local prerecord_level_reflector  =  sun_mode_2.get_reflector_id_by_engine_command_name(self,"pl")
@@ -117,7 +119,7 @@ function sun_mode_2.init(self)
         end)
       end)
 
-      -- trigger to reset the phase of the grain emitter (for syncing with other sounds)
+      -- Trigger to reset the phase of the grain emitter (for syncing with other sounds)
       params:add_trigger("reset_grain_phase"..sun_ix,"reset grain phase")
       params:set_action("reset_grain_phase"..sun_ix, function()
         engine_params = {}
@@ -141,14 +143,14 @@ function sun_mode_2.init(self)
       end)
     end
 
-    -- hide the params for the other sun
+    -- Hide the params for the other sun
     local other_sun = 3-self.index
     params:hide("grain_params_sun_"..other_sun)
     params:hide("grain_mode"..other_sun)
     params:hide("sample"..other_sun)
     params:hide("freeze_grains"..other_sun)
     params:hide("reset_grain_phase"..other_sun)
-    engine.gate(other_sun,0) -- set gate to 0 so grains can't play
+    engine.gate(other_sun,0) -- Set gate to 0 so grains can't play
     grain_params_created = true 
   else 
     print("unhide grain params",self.index)
@@ -157,23 +159,17 @@ function sun_mode_2.init(self)
     params:show("sample"..self.index)
     params:show("freeze_grains"..self.index)
     params:show("reset_grain_phase"..self.index)
-    engine.gate(self.index,1) -- set gate to 1 so grains can play
+    engine.gate(self.index,1) -- Set gate to 1 so grains can play
     _menu:rebuild_params()
   end
 
-  -- switch to granulate an audio file by default
-  -- note: a file path will look something like: `/home/we/dust/audio/my_file.wav`
-  -- params:set("sample"..self.index, "<ADD A FILE PATH>")  
+  -- Switch to granulate an audio file by default
+  -- Note: a file path will look something like: `/home/we/dust/audio/my_file.wav`
   params:set("sample"..self.index, "/home/we/dust/cc2_flora-1.wav")  
   params:set("grain_mode"..self.index, 2)  
 
 
-  ------------------------------------------
-  -- deinit
-  -- remove any variables or tables that might stick around
-  -- after switching to a different sun mode
-  -- for example: a lattice or reflection instance
-  ------------------------------------------
+  -- Deinit (cleanup) function
   self.deinit = function(self)
     print("deinit sun "..self.index .. " mode 2")
     engine.gate(self.index,0) -- set gate to 1 so grains can play
@@ -194,7 +190,7 @@ function sun_mode_2.init(self)
 end
 
 ------------------------------------------
--- helpers
+-- Helpers
 ------------------------------------------
 function sun_mode_2.hide_non_reflector_rays(self)
   for ray = 1, NUM_RAYS do
@@ -205,9 +201,9 @@ function sun_mode_2.hide_non_reflector_rays(self)
 end
 
 ------------------------------------------
--- get minimum brightness for a reflector
+-- Get minimum brightness for a reflector
 ------------------------------------------
-function sun_mode_2.get_MIN_LEVEL(self, reflector_id)
+function sun_mode_2.get_min_level(self, reflector_id)
   local min_l = 0
   for i=1, #self.reflector_locations do
     if reflector_id == self.reflector_locations[i] then
@@ -219,7 +215,7 @@ function sun_mode_2.get_MIN_LEVEL(self, reflector_id)
 end
 
 ------------------------------------------
--- get the next reflector from reflector_locations
+-- Get the next reflector from reflector_locations
 ------------------------------------------
 function sun_mode_2.get_next_ray(self, delta)
   local current_index = nil
@@ -235,25 +231,24 @@ function sun_mode_2.get_next_ray(self, delta)
 end
 
 ------------------------------------------
--- encoder handler
+-- Encoder handler
 ------------------------------------------
 function sun_mode_2.enc(self, n, delta)
   if n == 1 then
     self.state = util.clamp(self.state + delta, 1, #states)
   else
     if alt_key == true then
-      -- change the selected reflector
-      -- but first, if the curent reflector is recording, stop the recording
+      -- Change the selected reflector
+      --   But first, if the curent reflector is recording, stop the recording
       for i=1,#self.reflector_locations do
         local reflector_id = self.reflector_locations[i]  
-        if self.record[reflector_id] == 1 then -- if the reflector is recording then
+        if self.record[reflector_id] == 1 then                  -- If the reflector is recording then
           print("stop recording in progress...",reflector_id)
-          self.record[reflector_id] = 0                   -- set the recording flag to 0
-          self.reflectors[reflector_id]:set_rec(0)        -- stop recording
-          self.reflectors[reflector_id]:clear()           -- clear the reflector
+          self.record[reflector_id] = 0                         -- Set the recording flag to 0
+          self.reflectors[reflector_id]:set_rec(0)              -- Stop recording
+          self.reflectors[reflector_id]:clear()                 -- Clear the reflector
         end
       end
-      -- sun_mode_2.deselect_reflector(self, self.selected_ray) -- TODO: REMOVE THIS LINE: NOT NEEDED
       self.selected_ray = sun_mode_2.get_next_ray(self, delta)
       sun_mode_2.select_reflector(self, self.selected_ray)
       sun_mode_2.draw_reflector_cursor(self, self.selected_ray)
@@ -266,11 +261,11 @@ function sun_mode_2.enc(self, n, delta)
 end
 
 ------------------------------------------
--- key handler
+-- Key handler
 ------------------------------------------
 function sun_mode_2.key(self, n, z)
   local reflector_id = self.selected_ray
-  if self.state == 1 then  -- record state
+  if self.state == 1 then  -- Record state
     if self.record[reflector_id] == 1 and z == 0 then
       self.record[reflector_id] = 0
       self.reflectors[reflector_id]:set_rec(0)
@@ -281,7 +276,7 @@ function sun_mode_2.key(self, n, z)
       self.reflectors[reflector_id]:clear()
       self.reflectors[reflector_id]:set_rec(1)
     end
-  elseif self.state == 2 then -- play state
+  elseif self.state == 2 then -- Play state
     if z == 0 then
       if n == 2 then
         if self.play[reflector_id] == 1 then
@@ -299,7 +294,7 @@ function sun_mode_2.key(self, n, z)
         end
       end
     end
-  elseif self.state == 3 then  -- loop state
+  elseif self.state == 3 then  -- Loop state
     if self.loop[reflector_id] == 1 and z == 0 then
       self.loop[reflector_id] = 0
       print("key: stop reflector looping")
@@ -313,7 +308,7 @@ function sun_mode_2.key(self, n, z)
 end
 
 ------------------------------------------
--- get last selected photon for a reflector
+-- Get last selected photon for a reflector
 ------------------------------------------
 function sun_mode_2.get_last_selected_photon(self, reflector_id)
   local last_ph, last_ph_brightness
@@ -328,7 +323,7 @@ function sun_mode_2.get_last_selected_photon(self, reflector_id)
 end
 
 ------------------------------------------
--- calculate photon brightness for a reflector
+-- Calculate photon brightness for a reflector
 ------------------------------------------
 function sun_mode_2.get_photon_brightness(self, reflector_id, photon)
   local brightness, last_ph, last_ph_brightness
@@ -339,16 +334,16 @@ function sun_mode_2.get_photon_brightness(self, reflector_id, photon)
     elseif photon == last_ph then
       brightness = last_ph_brightness
     else
-      brightness = sun_mode_2.get_MIN_LEVEL(self, reflector_id)
+      brightness = sun_mode_2.get_min_level(self, reflector_id)
     end
   else
-    brightness = sun_mode_2.get_MIN_LEVEL(self, reflector_id)
+    brightness = sun_mode_2.get_min_level(self, reflector_id)
   end
   return brightness, last_ph
 end
 
 ------------------------------------------
--- draw the reflector cursor for a given reflector
+-- Draw the reflector cursor for a given reflector
 ------------------------------------------
 function sun_mode_2.draw_reflector_cursor(self, reflector_id)
   local brightness_fn = function(photon_id,photon)
@@ -360,7 +355,7 @@ function sun_mode_2.draw_reflector_cursor(self, reflector_id)
 end
 
 ------------------------------------------
--- set reflector cursor (absolute)
+-- Set reflector cursor (absolute)
 ------------------------------------------
 function sun_mode_2.set_reflector_cursor(self, reflector_id, val)
   if not self.reflection_indices[reflector_id] then
@@ -373,7 +368,7 @@ function sun_mode_2.set_reflector_cursor(self, reflector_id, val)
 end
 
 ------------------------------------------
--- set reflector cursor (relative)
+-- Set reflector cursor (relative)
 ------------------------------------------
 function sun_mode_2.set_reflector_cursor_rel(self, reflector_id, delta)
   if not self.reflection_indices[reflector_id] then
@@ -392,16 +387,16 @@ function sun_mode_2.set_reflector_cursor_rel(self, reflector_id, delta)
 end
 
 ------------------------------------------
--- deselect a reflector
+-- Deselect a reflector
 ------------------------------------------
 function sun_mode_2.deselect_reflector(self, reflector_id)
   self:set_ray_brightness(reflector_id,function() 
-    return sun_mode_2.get_MIN_LEVEL(self, reflector_id)
+    return sun_mode_2.get_min_level(self, reflector_id)
   end)
 end
 
 ------------------------------------------
--- select a reflector
+-- Select a reflector
 ------------------------------------------
 function sun_mode_2.select_reflector(self, reflector_id)
   -- First, hide all non-reflector rays.
@@ -412,7 +407,7 @@ function sun_mode_2.select_reflector(self, reflector_id)
       sun_mode_2.draw_reflector_cursor(self, reflector_id)
     end
     if photon_id < PHOTONS_PER_RAY then
-      return MIN_LEVEL
+      return min_level
     else
       local brightness = sun_mode_2.get_photon_brightness(self, reflector_id, photon_id)
       photon:morph_photon(MAX_LEVEL, brightness, 1, 15, 'lin', nil, reflector_id)
@@ -423,14 +418,14 @@ function sun_mode_2.select_reflector(self, reflector_id)
 end
 
 ------------------------------------------
--- check if the currently selected reflector has cursor data
+-- Check if the currently selected reflector has cursor data
 ------------------------------------------
 function sun_mode_2.ray_has_cursor(self)
   return self.reflection_indices[self.selected_ray] ~= nil
 end
 
 ------------------------------------------
--- calculate pointer position (for display)
+-- Calculate pointer position (for display)
 ------------------------------------------
 function sun_mode_2.calc_pointer_position(self)
   local center_x = (self.index == 1) and 32 or 96
@@ -443,7 +438,7 @@ function sun_mode_2.calc_pointer_position(self)
 end
 
 ------------------------------------------
--- redraw routine.
+-- Redraw routine.
 ------------------------------------------
 function sun_mode_2.redraw(self)
   local bottom_left_x = (self.index == 1) and 1 or 65
@@ -514,7 +509,7 @@ end
 
 ------------------------------------------
 ------------------------------------------
---      reflection code       --
+-- Reflection code       
 ------------------------------------------
 ------------------------------------------
 function sun_mode_2.store_reflector_data(self, reflector_id, data)
@@ -540,7 +535,7 @@ function sun_mode_2.init_reflectors(self)
     self.reflector_data[reflector_id] = {}
 
     self.reflectors[reflector_id] = reflection.new()
-    --[[ 0_0 ]]-- set looping on by default
+    -- [[ 0_0 ]] -- set looping on by default
     self.reflectors[reflector_id]:set_loop(1)                   
     self.reflectors[reflector_id].process = function(event)
       local value = event.value
@@ -592,17 +587,17 @@ end
 --======--111111111111111111111111111--======--    
 --======--===========================--======--
 ------------------------------------------
--- init sounds
+-- Init sounds
 ------------------------------------------
 function sun_mode_2.init_sounds(self)
-  -- init lattice
+  -- Init lattice
   sun_mode_2.init_lattice(self)
   
-  -- sync the active photon to supercollider sunshine engine values
-  -- note: at the moment each time a sun is set to this mode (#2)
-  --         the sunshine engine voice will be reset to its default values
-  --         since the code currently only defines a single voice for the engine,
-  --         and not, for example, one voice per sun
+  -- Sync the active photon to supercollider sunshine engine values
+  -- Note:   at the moment each time a sun is set to this mode (#2)
+  --         The sunshine engine voice will be reset to its default values
+  --         Since the code currently only defines a single voice for the engine,
+  --           and not, for example, one voice per sun
   for reflector_id=1, NUM_RAYS do
     local sc_voice = 1
     local engine_command_data = sun_mode_2.get_engine_command_data(self,reflector_id) 
@@ -612,13 +607,13 @@ function sun_mode_2.init_sounds(self)
       local min = engine_command_ranges[1]
       local max = engine_command_ranges[2]
       
-      --set the photon to match the default value 
-      --this will send an update to the sc engine to set the default value
+      --Set the photon to match the default value 
+      --This will send an update to the sc engine to set the default value
       local photon_val = util.linlin(min,max,1,128,engine_command_default_val)
       -- print("init reflector cursor",min,max,engine_command_default_val,photon_val)
       sun_mode_2.set_reflector_cursor(self,reflector_id,photon_val)
       
-      --update the engine_vals table to display the value on the screen
+      --Update the engine_vals table to display the value on the screen
       self.engine_vals[reflector_id] = engine_command_default_val
     end
   end
@@ -626,33 +621,34 @@ end
 
 
 ------------------------------------------
--- lattice code
+-- Lattice code
+-- Note: the lattice code is here for reference,
+--       but isn't actually used
 ------------------------------------------
-
--- init lattice
+-- Init lattice
 function sun_mode_2.init_lattice(self)
   local sun = self.index
-  
+
   self.lattice = lattice:new{
     auto = true,
     ppqn = 96
   }   
 
-  -- make a sprockets for sun1 and sun 2
+  -- Define sprockets for sun1 and sun 2
   self.sprocket_1 = self.lattice:new_sprocket{
     action = function(t) 
       sun_mode_2.event_router(self, nil, "sprocket")
     end,
-    division = 1/4,
-    enabled = true
+    division = 1/4, -- [[ 0_0 ]] --
+    enabled = true  -- [[ 0_0 ]] --
   }
-  
+
   self.sprocket_2 = self.lattice:new_sprocket{
     action = function(t) 
       sun_mode_2.event_router(self, nil, "sprocket")
     end,
-    division = 1/8,
-    enabled = true
+    division = 1/8, -- [[ 0_0 ]] --
+    enabled = true  -- [[ 0_0 ]] --
   }
 
   self.lattice:start()
@@ -662,39 +658,43 @@ end
 -- supercollider communication code
 ------------------------------------------
 
--- initializes a table containing engine command names
+-- Initialize a table containing engine command names
 --   along with functions to put the reflector values in proper ranges
---   IMPORTANT: the order of the engine commands sets which sun ray/reflector 
---              updates which engine command. if there are more items in the `engine_commands`
---              table than there are items in the `reflector_locations` table, the code will break
+-- IMPORTANT: the order of the engine commands sets which sun ray/reflector 
+--            updates which engine command. if there are more items in the `engine_commands`
+--            table than there are items in the `reflector_locations` table, the code will break
 sun_mode_2.init_engine_commands = function (self)
-  -- the engine_commands table holds data that is used for a number of purposes, including:
-  --    * the labels displayed on the screen for each engine command 
-  --    * the engine commands called by lua and sent to SuperCollider
-  --    * min/max value ranges for each engine command 
-  --    * whether each engine command value should be rounded (and the rounding decimal place)
-  --    * the default value for each engine command (set when sun mode 2 is initialized)
+  -- The engine_commands table holds data that is used for a number of purposes, including:
+  --    * The labels displayed on the screen for each engine command 
+  --    * The engine commands called by lua and sent to SuperCollider
+  --    * Min/max value ranges for each engine command 
+  --    * Whether each engine command value should be rounded (and the rounding decimal place)
+  --    * The default value for each engine command (set when sun mode 2 is initialized)
   --
-  --    for example, the item in the `engine_commands` table defines:
+  --    For example, the item in the `engine_commands` table defines:
   --    * "sp" as the screen label 
   --    * `engine.speed` as the engine command
   --    *  -5 and 5 as the min/max values that can be sent to the engine for this command
-  --    * rounding is set to true and 0.1 is set as the rounding value
-  --    * the default is set to 1
+  --    * Rounding is set to true and 0.1 is set as the rounding value
+  --    * The default is set to 1
+
+  -- [[ 0_0 ]] --
+  -- Try changing the default values for these params
+  -- Try replacing one of the params with the one at the bottom (for engine.buf_win_end) that is commented out 
   engine_commands = {
-  --abbr.      engine command       range, rounding       default         
-    { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
-    { "dn",    engine.density,      { 1,40,true },        1         },
-    { "ps",    engine.pos,          { 0,1 },              0         },
-    { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
-    { "jt",    engine.jitter,       { 0,1 },              0         },
-    { "ge",    engine.grain_env,    { 1,6,true,1 },       6         },
-    { "rl",    engine.rec_level,    { 0,1,true,0.01 },    1         },
-    { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
-  --{ "we",    engine.buf_win_end,  { 0.01,1 },           1         },
+  -- abbr.      engine command       range, rounding       default         
+     { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
+     { "dn",    engine.density,      { 1,40,true },        1         },
+     { "ps",    engine.pos,          { 0,1 },              0         },
+     { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
+     { "jt",    engine.jitter,       { 0,1 },              0         },
+     { "ge",    engine.grain_env,    { 1,6,true,1 },       6         },
+     { "rl",    engine.rec_level,    { 0,1,true,0.01 },    1         },
+     { "pl",    engine.pre_level,    { 0,1,true,0.01 },    0         },
+  -- { "we",    engine.buf_win_end,  { 0.01,1 },           1         },
   }
 
-  -- update the engine with the default settings for each engine command
+  -- Update the engine with the default settings for each engine command
   local voice = self.index
   for ix=1,#engine_commands do
     local command_abbr = engine_commands[ix][1]
@@ -731,9 +731,9 @@ function sun_mode_2.get_engine_command_data(self,reflector_id)
   end
 end
 
--- for each item in the `engine_commands` table, look up the command name acronym
+-- For each item in the `engine_commands` table, look up the command name acronym
 --   which is located in the first slot of the `engine_commands` table
---   and if the acronym matches the one in this functions `engine_command_name` parameter,
+-- If the acronym matches the one in this functions `engine_command_name` parameter,
 --   look up the corresponding `reflector_id` from the `self.reflector_locations` table
 function sun_mode_2.get_reflector_id_by_engine_command_name(self, engine_command_name)
   local reflector_id
@@ -749,17 +749,16 @@ function sun_mode_2.get_reflector_id_by_engine_command_name(self, engine_command
   if not reflector_id then print("couldn't find reflector id for ", engine_command_name) end
 end
   
--- update supercollider engine and keep track of the updates
--- note#1: for the third parameter (reflector_id_or_command_name) you can send either 
---         a `reflector_id` 
+-- Update the SuperCollider engine and keep track of the updates
+-- Note#1: for the third parameter (reflector_id_or_command_name) you can send either a `reflector_id` 
 --         or the two letter acronym for the engine command (e.g. 'sz' for engine.size).
---         see `engine_commands` above for the list of acronyms.
--- note#2: the 4th parameter, `value`, is relative to the photon value (1-128)
---           the update_engine code remaps these values to the ones expected by the supercollider engine
---           for example, setting a value of 128 for speed would be mapped to 5 (i.e. max speed)
+--         See `engine_commands` above for the list of acronyms.
+-- Note#2: the 4th parameter, `value`, is relative to the photon value (1-128)
+--         The update_engine code remaps these values to the ones expected by the supercollider engine
+--         For example, setting a value of 128 for speed would be mapped to 5 (i.e. max speed)
 function sun_mode_2.update_engine(self, sc_voice, reflector_id_or_command_name, value)
-  -- if reflector_id_or_command_name is a number, assumed it is a reflector_id
-  --   otherwise, assume it is a command name acronym from the `engine_commmands` table.
+  -- If reflector_id_or_command_name is a number, assumed it is a reflector_id
+  --   Otherwise, assume it is a command name acronym from the `engine_commmands` table.
   local reflector_id, engine_command_name, engine_command_data
   if type(reflector_id_or_command_name) == "number" then
     reflector_id = reflector_id_or_command_name
@@ -776,16 +775,15 @@ function sun_mode_2.update_engine(self, sc_voice, reflector_id_or_command_name, 
   local engine_fn = engine_command_data[2]
   self.engine_vals[reflector_id] = mapped_val
   
-  -- call the SuperCollider engine command
+  -- Call the SuperCollider engine command
   engine_fn(sc_voice,mapped_val)
   -- print("update engine (reflector/command/mapped value/original)  ", reflector_id, engine_command_name, mapped_val,value)
 end
   
 ------------------------------------------
--- event router (configure controls here)
+-- Event router (configure controls here)
 ------------------------------------------
--- define an event router that consolidates 
---   all the reflector events and lattice/sprocket events
+-- Define an event router that consolidates all the reflector events and lattice/sprocket events
 function sun_mode_2.event_router(self, reflector_id, event_type, value)
   local sun = self.index
   
@@ -793,14 +791,14 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
 
   if sun == 1 then
     if event_type == "process" then 
-      -- update changes triggered by
-      --   encoder 3 and/or reflector recordings
+      -- Update changes triggered by encoder 3 and/or reflector recordings
       local sc_voice = sun
       sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
       
     end
 
-    -- unused events
+    -- [[ 0_0 ]] --
+    -- Unused events (uncomment these events one by one to better understand when they are triggered)
     -- if event_type == "sprocket"  then --[[ do something with sprocket update]] end
     -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
     -- if event_type == "record_start"  then --[[ do something with record_start]] end
@@ -809,13 +807,13 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
     -- if event_type == "pattern_end"   then --[[ do something with pattern_end]] end
   elseif sun == 2 then
     if event_type == "process" then 
-      -- update changes triggered by
-      --   encoder 3 and/or reflector recordings
+      -- Update changes triggered by encoder 3 and/or reflector recordings
       local sc_voice = 2
       sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
     end
 
-    -- unused events
+    -- [[ 0_0 ]] --
+    -- Unused events (uncomment these events one by one to better understand when they are triggered)
     -- if event_type == "sprocket"  then --[[ do something with sprocket update]] end
     -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
     -- if event_type == "record_start"  then --[[ do something with record_start]] end
@@ -825,7 +823,4 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
   end
 end
 
-
-
 return sun_mode_2
-

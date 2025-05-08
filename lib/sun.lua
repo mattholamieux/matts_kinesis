@@ -1,83 +1,75 @@
--- lib/sun.lua
--- note: this class operates in different "modes" 
+-- Note: this class operates in different "modes" 
 --   and uses a "strategy" design pattern to run the code 
 --   required for each mode.
 --
---   this separates the implementation details for each mode
+--   This separates the implementation details for each mode
 --     from one another so modes can change and new modes can 
 --     be developed with minimal changes required in 
 --     in the main sun.lua codebase
 --
---   see: https://en.wikipedia.org/wiki/Strategy_pattern
+--   See: https://en.wikipedia.org/wiki/Strategy_pattern
 --
 
 local Ray = include "lib/ray"
-local sun_mode_1 = include "lib/sun_mode_1"
-local sun_mode_2 = include "lib/sun_mode_2"
-local sun_mode_3 = include "lib/sun_mode_3"
-local sun_mode_4 = include "lib/sun_mode_4"
 
 local Sun = {}
 Sun.__index = Sun
 
--- constants 
---   constants are written in all caps. they never change.
---   constants are global, written without `local` before the name, 
---     and are accessible throughout the codebase.
+local sun_modes = {
+  [1] = include "lib/sun_mode_1",
+  [2] = include "lib/sun_mode_2",
+  [3] = include "lib/sun_mode_3",
+  [4] = include "lib/sun_mode_4"
+}
+
+-- NOTE: CONSTANT VARIABLES
+--   The following variables are written in all caps. 
+--   Writing a variable in all caps indicates that they never change.
+--   Writing these variables without `local` before the name makes them global.
+--   Global variables are accessible globally.
 SUN1_X = 32
 SUN2_X = 96
-NUM_RAYS = 16
-PHOTONS_PER_RAY = 8
-SUN_RADIUS = 4
-MIN_LEVEL = 2
-MAX_LEVEL = 15
-ACTIVE_RAY_BRIGHTNESS = 7--10
+NUM_RAYS = 16               -- [[ 0_0 ]] --
+PHOTONS_PER_RAY = 8         -- [[ 0_0 ]] --
+SUN_RADIUS = 4              -- [[ 0_0 ]] --
+min_level = 2               -- [[ 0_0 ]] --
+MAX_LEVEL = 15              -- [[ 0_0 ]] --
+ACTIVE_RAY_BRIGHTNESS = 7   -- [[ 0_0 ]] --
 
 function Sun:new(index, mode, ray_changed_callback, photon_changed_callback)
-  local obj = {
+  local sun_obj = {
     index = index,
     mode = mode,
+    sun_level = 10,
     ray_changed_callback = ray_changed_callback,
     photon_changed_callback = photon_changed_callback,
     rays = {},
     velocity = 0,
     motion_clock = nil,
     direction = 0,
-    sun_level = 10,
     last_selected_rays = {},
     last_selected_photons = {}
   }
-  setmetatable(obj, Sun)
+  setmetatable(sun_obj, Sun)
   
-  -- instantiate each ray
-  for r = 1, NUM_RAYS do obj.rays[r] = Ray:new(index, r) end
+  -- Instantiate each ray
+  for r = 1, NUM_RAYS do sun_obj.rays[r] = Ray:new(index, r) end
 
   -- initialize the sun modes
+  sun_modes[mode].init(sun_obj)
   print("init sun mode: ", mode)
-  if      mode == 1 then sun_mode_1.init(obj)
-  elseif  mode == 2 then sun_mode_2.init(obj)
-  elseif  mode == 3 then sun_mode_3.init(obj)
-  elseif  mode == 4 then sun_mode_4.init(obj)     
-  end
   
-  return obj
+  return sun_obj
 end
 
 -- Delegate encoder (enc) handling to the mode-specific functions.
 function Sun:enc(n, delta)
-  if self.mode == 1 then       sun_mode_1.enc(self, n, delta)
-  elseif self.mode == 2 then   sun_mode_2.enc(self, n, delta)
-  elseif self.mode == 3 then   sun_mode_3.enc(self, n, delta)
-  elseif self.mode == 4 then   sun_mode_4.enc(self, n, delta)
-  end
+  -- print("enc", self.mode,sun_modes[self.mode].enc, n, delta)
+  sun_modes[self.mode].enc(self, n, delta)
 end
 
 function Sun:key(n, z)
-  if self.mode == 1 then       sun_mode_1.key(self, n, z)
-  elseif self.mode == 2 then   sun_mode_2.key(self, n, z)
-  elseif self.mode == 3 then   sun_mode_3.key(self, n, z)
-  elseif self.mode == 4 then   sun_mode_4.key(self, n, z)
-  end  
+  sun_modes[self.mode].key(self, n, z)
 end
 
 function Sun:get_ray_photon(ix)
@@ -91,20 +83,19 @@ function Sun:get_photon(ray, photon)
   return self.rays[ray]:get_photon(photon)
 end
 
--- note: update_state and self.last_selected_photon is not used in mode 3
 function Sun:update_state()
   for _, ray in ipairs(self.rays) do
-    ray:clear_state(MIN_LEVEL)
+    ray:clear_state(min_level)
   end
 
   for ix, photon_index in ipairs(self.active_photons) do
     local ray, photon = self:get_ray_photon(photon_index)
     
     ------------------------------------------------
-    -- callback code: notify on ray or photon change
+    -- Callback code: notify on ray or photon change
     ------------------------------------------------
     
-    -- >>>>first, check if a ray or photon has changed
+    -- First, check if a ray or photon has changed
     --   BUT ONLY IF THERE IS A CALLBACK DEFINED 
     
     local ray_changed = ray ~= self.last_selected_rays[ix] and 
@@ -115,7 +106,7 @@ function Sun:update_state()
                                      
     -- print("photon changed",self.photon_changed_callback and self.last_selected_photon and photon ~= self.last_selected_photon )
     
-    -- >>>>>then, call the callbacks
+    -- Then, call the callbacks
     if ray_changed then
       self.ray_changed_callback(self, ray, photon)
       -- print("ray changed",ix, photon_changed, ray, self.last_selected_rays[ix])
@@ -128,7 +119,7 @@ function Sun:update_state()
     self.last_selected_photons[ix] = photon
     self.last_selected_rays[ix] = ray
     
-    -- highlight non-active photons on the same ray
+    -- Highlight non-active photons on the same ray
     local brightness_fn = function(photon)
       local flat_index = (ray - 1) * PHOTONS_PER_RAY + photon
       local has_active_photons = not table_contains(self.active_photons, flat_index)
@@ -139,7 +130,7 @@ function Sun:update_state()
   end
 end
 
--- set active photons by an array of {ray_id, photon_id} pairs
+-- Set active photons by an array of {ray_id, photon_id} pairs
 function Sun:set_active_photons(ids)
   self.active_photons = {}
   for i=1, #ids do
@@ -151,7 +142,7 @@ function Sun:set_active_photons(ids)
   self:update_state()
 end
 
---change the active photons relative to the delta value
+-- Change the active photons relative to the delta value
 function Sun:set_active_photons_rel(delta) 
   local new_active = {}
   if #self.active_photons == 0 then
@@ -189,19 +180,18 @@ function Sun:set_ray_brightness(ray, brightness)
   for photon = 1, PHOTONS_PER_RAY do
     local p = self:get_photon(ray, photon)
 
-    -- if brightness is a function: 
+    -- If brightness is a function: 
     --  call it and redefine brightness as the function's return value
     --  otherwise, assume it is a number and set it back to itself
     brightness_level = brightness_is_fn and brightness(photon,p) or brightness
 
-    -- safety check: before setting brightness, make sure it is now a number
+    -- Safety check: before setting brightness, make sure it is now a number
     if type(brightness_level) == "number" then p:set_brightness(brightness_level) end
   end
 end
 
 function Sun:redraw(force_redraw)
   for ix, ray in ipairs(self.rays) do
-    -- if force_redraw then print("redraw ray",ix) end
     ray:redraw(force_redraw)
   end
 
@@ -210,11 +200,7 @@ function Sun:redraw(force_redraw)
   screen.circle(cx, 32, SUN_RADIUS)
   screen.fill()
 
-  if self.mode == 1 then sun_mode_1.redraw(self)
-  elseif self.mode == 2 then sun_mode_2.redraw(self)
-  elseif self.mode == 3 then sun_mode_3.redraw(self)
-  elseif self.mode == 4 then sun_mode_4.redraw(self)
-  end
+  sun_modes[self.mode].redraw(self)
 end
 
 return Sun

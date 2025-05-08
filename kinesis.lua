@@ -1,67 +1,70 @@
--- kinesis (gestures): built for the habitus workshop
+-- kinesis (gestures): bUIlt for the habitus workshop
 -- 0.1 @jaseknighter
 -- l.llllllll.co/<insert link to lines thread>
 --
 --
---  this script presents two "suns" made up of "rays" and "photons"
---  each sun operates in one of four "modes"
---   to change modes: press K1 + K2 (sun 1) or K1 + K3 (sun 2)
+-- Some notes about learning from this code:
+--   Lines starting with "--" are comments, they don't get executed
+--   Most comments help explain the code, but also:
+--     Find the -- [[ 0_0 ]] -- for good places to edit
 --
---   mode 1
---     ui behavior:    turning an encoder moves photons around the sun
---     sound behavior: softcut
---   mode 2 
---     ui behavior:   the movement of photons in each ray gets recorded 
---                     and played back (using the reflection library)
---     sound behavior: softcut
---   mode 3
---     ui behavior: encoders activate a photon moving around its sun
---     sound behavior: nothing by default. up to you to define
---   mode 4
---     ui behavior: same as mode 1
---     sound behavior: nothing by default. up to you to define
-
--- lines starting with "--" are comments, they don't get executed
-
--- find the --[[ 0_0 ]]-- for good places to edit!
+-- This script has a UI build around the idea of two "suns" made up of "rays" and "photons"
+--
+-- Each sun operates in one of four "modes"
+--   To change modes: press K1 + K2 (sun 1) or K1 + K3 (sun 2)
+--
+--   Mode 1
+--     Sound behavior:  softcut
+--     UI behavior:     Turning an encoder moves photons around the sun
+--   Modes 2 
+--     Sound behavior:  softcut
+--     UI behavior:     The movement of photons in each ray gets recorded 
+--                      and played back (using the reflection library)
+--   Mode 3
+--     Sound behavior:  Nothing by default. Up to you to define.
+--     UI behavior:     Encoders activate a photon moving around its sun
+--   Mode 4
+--     Sound behavior:  Nothing by default. Up to you to define.
+--     UI behavior:     Same as Mode 1
 
 ---------------------------------------------------
--- todo: 
--- fix code so redraw timer doesn't have to constantly set screen_dirty to true
+-- Todo: 
+-- Fix code so redraw timer doesn't have to constantly set screen_dirty to true
 -- consider updating each sun mode's init func so it sets state details in a unique table
 --   (e.g. `suns[sun_id][mode_id]`)
--- for sun 2 (granular voice):
---   finish setting up the mode to send granulate a recording
---   add a param to switch between live and recorded mode
---   should we create two voices (one for each sun)? (if we do, fix references to `sc_voice` in the lua code)
---   update the sun brightness to reflect the position of the 
---     grainbuf playhead
--- add the --[[ 0_0 ]]-- for good places to edit!
--- add some tables that would be good to explore from the repl with for...in loops
---    for example: suns[1].reflector locations and suns[1].reflectors
--- add "ideas for experimenting for each sun" (maybe label as "beginner", "intermediate", "advanced"? or maybe just include beginner ideas since more experienced folks should be able to come up with their own ideas for experimenting?)
---   for example: 
---     move the engine_commands table into the scope of `self` so you can have two granular synths running together that execute different engine commands
---     switch rec and pre levels for the live recording
---     add panning
---     freeze grains param (perhaps remove this from the final code 
+-- For sun 2 (granular voice):
+--   Finish setting up the mode to send granulate a recording
+--   Add a param to switch between live and recorded mode
+--   Should we create two voices (one for each sun)? (if we do, fix references to `sc_voice` in the lua code)
+--   Update the sun brightness to reflect the position of the 
+--     GrainBuf playhead
+-- Add the -- [[ 0_0 ]] -- for good places to edit!
+-- Add some tables that would be good to explore from the repl with for...in loops
+--    For example: suns[1].reflector locations and suns[1].reflectors
+-- Add "ideas for experimenting for each sun" (maybe label as "beginner", "intermediate", "advanced"? or maybe just include beginner ideas since more experienced folks should be able to come up with their own ideas for experimenting?)
+--   For example: 
+--     Move the engine_commands table into the scope of `self` so you can have two granular synths running together that execute different engine commands
+--     Switch rec and pre levels for the live recording
+--     Add panning
+--     Freeze grains param (perhaps remove this from the final code 
 --       so it can be an exercize?)
---     uncomment out a print/postln/poll statement and see what it looks like (idea: number the print/postln/poll statements to provide a sort of breadcrumb path into the code)
---      good locations to do this:
+--     Uncomment out a print/postln/poll statement and see what it looks like (idea: number the print/postln/poll statements to provide a sort of breadcrumb path into the code)
+--       good locations to do this:
 --          sun_mode_2.update_engine: print("update engine", engine_fn_name, mapped_val)
 ---------------------------------------------------
 
+-- load norns modules
 lattice = require("lattice")
 reflection = require 'reflection'
 musicutil = require 'musicutil'
 fileselect=require 'fileselect'
 
-include "lib/utilities"
 
-local Sun = include "lib/sun"
+engine.name = 'Sunshine'      -- use the Sunshine SuperCollider engine
 
-engine.name = 'Sunshine'
--- engine.name = 'Kinesis'
+include "lib/utilities"       -- load utilities written for this script
+
+local Sun = include "lib/sun" 
 
 screen_dirty = true
 
@@ -72,47 +75,52 @@ alt_key = false
 
 suns = {}
 
--- there are 4 "modes" 
---   note: modes 3 & 4 doesn't actually do anything sound-wise by default
---   mode1: (softcut controls) encoder sets photon velocity
---   mode2: (granular synth + reflection lib) each ray controls a different parameter
---   mode3: (generic) encoder changes the active "photon"
---   mode4: (generic) encoder sets photon velocity
+-- There are 4 "modes" 
+--   Note: modes 3 & 4 doesn't actually do anything sound-wise by default
+--   Mode 1: (softcut controls) encoder sets photon velocity
+--   Mode 2: (granular synth + reflection lib) each ray controls a different parameter
+--   Mode 3: (generic) encoder changes the active "photon"
+--   Mode 4: (generic) encoder sets photon velocity
 
-sun_modes = {2, 1} -- by default, set sun 1 to mode 2 and sun 2 to mode 1
 
+-- By default, set sun 1 to mode 2 and sun 2 to mode 1
+local current_modes = {2, 1} -- [[ 0_0 ]] -- change the default mode for each sun
+
+-- All norns scripts call an init function when the script first loads
 function init()
+  screen.clear()
   init_sun(1)
   init_sun(2)
-  -- clear the softcut buffer in case it was being used by a 
-  --   previously loaded script
+
+  -- Clear the softcut buffer in case it was being used by a previously loaded script
   softcut.buffer_clear()
  
   local redraw_rate = 1/15
   redrawtimer = metro.init(function()
     if prev_norns_menu_status and not norns.menu.status() then
       screen_dirty = true
-    elseif not norns.menu.status() then
-      redraw()
+
     end
     prev_norns_menu_status = norns.menu.status()
+    redraw()
   end, redraw_rate, -1)
 
   clock.run(function()
-    --delay starting the redraw timer to give the script time to finish initializing
-    clock.sleep(1)
+    clock.sleep(1) -- Delay starting the redraw timer to give the script time to finish initializing
+    
     redrawtimer:start()
   end)
 end
 
 function init_sun(sun)
-  local mode = sun_modes[sun]
-  if suns[sun] and suns[sun].deinit then suns[sun].deinit(suns[sun]) end
+  local mode = current_modes[sun]
+  if suns[sun] then suns[sun].deinit(suns[sun]) end
   suns[sun] = Sun:new(sun, mode)
   screen_dirty = true
 end
 
 function key(n, z)
+  -- print("key", n, z) -- [[ 0_0 ]] --
   if n==1 then
     if  z==1 then
       alt_key = true
@@ -122,15 +130,15 @@ function key(n, z)
   elseif n==2 then
     if z==0 then
       if alt_key == true then
-        sun_modes[1] = util.wrap(sun_modes[1]+1,1,num_sun_modes)
-        init_sun(1,sun_modes[1])
+        current_modes[1] = util.wrap(current_modes[1]+1,1,num_sun_modes)
+        init_sun(1,current_modes[1])
       end
     end
   elseif n==3 then 
     if z==0 then
       if alt_key == true then
-        sun_modes[2] = util.wrap(sun_modes[2]+1,1,num_sun_modes)
-        init_sun(2,sun_modes[2])
+        current_modes[2] = util.wrap(current_modes[2]+1,1,num_sun_modes)
+        init_sun(2,current_modes[2])
       end
     end
   end
@@ -142,6 +150,7 @@ function key(n, z)
 end
 
 function enc(n, delta)
+  -- print("enc", n, delta) -- [[ 0_0 ]] --
   if n == 1 then
     suns[1]:enc(n,delta)
     suns[2]:enc(n,delta)
@@ -153,28 +162,23 @@ end
 
 function redraw()
   if screen_dirty then 
-    screen.clear() 
-    -- print("screen dirty")
+    screen.clear()                        -- Clear the screen
+    screen.level(3)                       -- Set a brightness level
+    screen.move(2,5)                      -- 1st sun: move the screen cursor 
+    screen.text("m"..current_modes[1])    -- 1st sun: draw the sun's number
+    screen.move(67,5)                     -- 2nd sun: move the screen cursor 
+    screen.text("m"..current_modes[2])    -- 2nd sun: draw the sun's number   
+    screen.level(15)                      -- Set a brightness level for the screen
+    screen.move(64,0)                     -- Move the drawing position the the top center
+    screen.line(64,64)                    -- Draw a line to the bottom center
+    screen.stroke()                       -- 
   end
-
+  
   for i=1, 2 do
-    suns[i]:redraw(screen_dirty)
+    suns[i]:redraw(screen_dirty)          -- Call each sun's redraw function
   end
-
-  -- draw the sun mode # at the top left of each sun
-  screen.level(3)               -- set a brightness level for the screen
-  screen.move(2,5)              -- 1st sun: move the screen cursor 
-  screen.text("m"..sun_modes[1])     -- 1st sun: draw the sun's number
-  screen.move(67,5)             -- 2nd sun: move the screen cursor 
-  screen.text("m"..sun_modes[2])     -- 2nd sun: draw the sun's number
+  screen.update()                         -- Copy the screen buffer to the screen
+  screen_dirty = false
   
-  
-  screen.level(15)               -- set a brightness level for the screen
-  screen.move(64,0)
-  screen.line(64,64)
-  screen.stroke()
-  screen.update()               -- update the screen
-  -- set screen_dirty to false so we only draw when necessary
-  screen_dirty = false        
 end
 

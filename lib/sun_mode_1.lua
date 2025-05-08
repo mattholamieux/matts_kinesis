@@ -1,13 +1,18 @@
--- lib/sun_mode_1.lua
+-- Sun mode 1: Softcut
+-- Reference: https://monome.org/docs/norns/softcut/ 
+
 local sun_mode_1 = {}
 
+------------------------------------------
+-- Initialization and deinitialization
+-- Note: the init function for each sun mode receives a reference to the sun unitializing it (self)
+------------------------------------------
 function sun_mode_1.init(self)
-  -- set callbacks for changes in active photon/ray
+  -- Set callbacks for changes in active photon/ray
   self.photon_changed_callback  = sun_mode_1.photon_changed
   self.ray_changed_callback     = sun_mode_1.ray_changed
 
-  -- set variables needed for mode 1 code
-  -- variables for rotating the active photons 
+  -- Variables for rotating the active photons 
   self.active_photons = {1}
   self.wait_clock = nil
   self.velocity_deltas = {}
@@ -17,11 +22,11 @@ function sun_mode_1.init(self)
   self.cut_previous_input_direction = 0
   self.reversed = false
   self.cut_recently_reversed = false
-  self.cut_previewing = false
+  self.cut_preview_speed = false
   self.sun_level_base = 10
   self.sun_level = self.sun_level_base
 
-  -- initialize softcut and supporting variables   
+  -- Initialize softcut and supporting variables   
   self.cut_voice   =  self.index
   self.cut_rate      =  1
   self.cut_rec       =  0.2 --0.5
@@ -32,12 +37,7 @@ function sun_mode_1.init(self)
 
   self:update_state()
 
-  ------------------------------------------
-  -- deinit
-  -- remove any variables or tables that might stick around
-  -- after switching to a different sun mode
-  -- for example: a lattice or reflection instance
-  ------------------------------------------
+  -- Deinit (cleanup) function
   self.deinit = function()
     print("deinit sun mode: 1")
     softcut.buffer_clear_channel(self.index)
@@ -48,7 +48,7 @@ end
 
 function sun_mode_1.init_softcut(self)
   print("init softcut")
-  -- send audio input to softcut input
+  
   audio.level_adc_cut(0)
   audio.level_eng_cut(1)
   
@@ -70,7 +70,7 @@ function sun_mode_1.init_softcut(self)
 end
 
 function sun_mode_1.key(self, n, z)
-  --do something when a key is pressed
+  -- 0_0 -- Do something when a key is pressed
 end
 
 function sun_mode_1.enc(self, n, delta)
@@ -78,11 +78,11 @@ function sun_mode_1.enc(self, n, delta)
   sun_mode_1.set_speed(self,delta)
 end
 
--- set the speed and direction of the photons
+-- Set the speed and direction of the photons
 function sun_mode_1.set_speed(self,delta)
   local input_direction = sign(delta)
   
-  -- check to see if the photon movement should stop due to direction changing
+  -- Check to see if the photon movement should stop due to direction changing
   if input_direction ~= self.cut_previous_input_direction and self.cut_previous_input_direction ~= 0 then
     -- print("reverse direction")
     if self.motion_clock then
@@ -97,12 +97,12 @@ function sun_mode_1.set_speed(self,delta)
     self.velocity = 0
     self.direction = 0
     self.sun_pulsing = false
-    self.cut_previewing = false
+    self.cut_preview_speed = false
     self.velocity_deltas = {}
     self.reversed = true
     self.cut_previous_input_direction = input_direction
     
-    -- set cut_recently_reversed to true for 5 seconds
+    -- Set cut_recently_reversed to true for 0.5 seconds
     self.cut_recently_reversed = true
     clock.run(function()
       clock.sleep(0.5)
@@ -111,8 +111,7 @@ function sun_mode_1.set_speed(self,delta)
     return
   end
   
-  -- if cut_recently_reversed is true, break out of this code 
-  --   (this prevents velocity from being set)
+  -- If cut_recently_reversed is true, break out of this code (this prevents velocity from being set)
   if self.cut_recently_reversed then
     -- print("recently reversed")
     return
@@ -131,7 +130,7 @@ function sun_mode_1.set_velocity(self,delta)
     local now = util.time()
     table.insert(self.velocity_deltas, {delta = delta, time = now})
   
-    self.cut_previewing = true
+    self.cut_preview_speed = true
     self.sun_pulsing = true
   
     if #self.velocity_deltas >= 2 then
@@ -149,7 +148,7 @@ function sun_mode_1.set_velocity(self,delta)
     self.wait_clock = clock.run(function()
       clock.sleep(0.5)
       if #self.velocity_deltas == 0 then
-        self.cut_previewing = false
+        self.cut_preview_speed = false
         return
       end
   
@@ -163,7 +162,7 @@ function sun_mode_1.set_velocity(self,delta)
   
       self.velocity_deltas = {}
       self.wait_clock = nil
-      self.cut_previewing = false
+      self.cut_preview_speed = false
   
       if math.abs(new_velocity) < 0.01 then
         self.velocity = 0
@@ -196,20 +195,21 @@ function sun_mode_1.draw_sun_pulsing(self)
 end
 
 function sun_mode_1.redraw(self)
-    if self.sun_pulsing or self.cut_previewing then
+    if self.sun_pulsing or self.cut_preview_speed then
       sun_mode_1.draw_sun_pulsing(self)
     elseif not self.sun_pulsing then
       self.sun_level = self.sun_level_base
     end  
 end
 
--- callbacks
--- if a new photon has been highlighted do someting
+-- Callbacks
+
+-- [[ 0_0 ]] -- If a new photon has been highlighted do someting
 function sun_mode_1.photon_changed(self,ray_id,photon_id)
   -- print("photon_changed in mode 1",self.index,ray_id,photon_id)
 end
 
--- if a new ray has been highlighted do someting
+-- [[ 0_0 ]] -- If a new ray has been highlighted do someting
 function sun_mode_1.ray_changed(self,ray_id,photon_id)
   -- print("ray_changed in mode 1",self.index,ray_id,photon_id)
   if ray_id%2 == 0 then
