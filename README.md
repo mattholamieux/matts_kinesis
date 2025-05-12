@@ -27,6 +27,7 @@ By default:
 
 ## Sun 1: granulate audio
 ![](images/kinesis_granular_mode2.png)
+
 On load, the sunshine engine immediately starts granulating the norns' audio input. each ray controls a different grain synth param (aka "engine command"). You can also granulate pre-recorded audio (see below for details.)
 
 This granular synth engine uses SuperCollider's [GrainBuf](https://doc.sccode.org/Classes/GrainBuf.html) UGen. GrainBuf granulates audio using sound stored in a [buffer](https://doc.sccode.org/Classes/Buffer.html).
@@ -83,6 +84,7 @@ The `reset grain phase` trigger in the params menu regenerates the supercollider
 
 ## Sun 2: audio mangling with softcut
 ![](images/kinesis_softcut_mode1.png)
+
 By default, the 2nd sun is configured to switch the softcut rate between 1 and 2. It is triggered when the lighted photon arrives at every other ray.
 
 To start softcut rate switching, turn E3 until you see the sun pulsating. The velocity at which you turn E3 gets translated into the speed at which the softcut rate switches between 1 and 2.
