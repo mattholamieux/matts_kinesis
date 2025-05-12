@@ -1,3 +1,5 @@
+![](images/kinesis1.png)
+
 Although musical out of the box, the kinesis script was written for the 2025 habitus workshops and is meant to be tinkered with by folks with a beginning to intermediate level of norns-scripting  experience...for example, folks who have completed the [norns studies](https://monome.org/docs/norns/studies/) but aren't quite ready to create a whole script from scratch.
 
 The notes below cover installation, quick start (for making sounds) and some ideas for modifying the script.
