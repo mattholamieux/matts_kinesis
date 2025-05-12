@@ -50,6 +50,7 @@ function test_morph_callback(next_val, done, caller_id)
   if done == true then -- if done, next value should be 10
     print("test morph done",next_val, done, caller_id)
     T.assertEquals(next_val,10)
+    tests_done()
   end
 end
 
@@ -59,9 +60,21 @@ function test_morph()
   end)
 end
 
+function tests_done()
+  print("")
+  print("completed: unit tests for /lib/utilities.lua")
+  print("----------------------------------------")
+end
+
 function run()
   -- T.LuaUnit.run("test_quotient_remainder",)
   T.LuaUnit.run("test_morph")
 end
 
-run()
+clock.run(function()
+  clock.sleep(1)
+  print("")
+  print("----------------------------------------")
+  print("start: unit tests for /lib/utilities.lua")
+  run()
+end)

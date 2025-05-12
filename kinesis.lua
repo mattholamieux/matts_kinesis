@@ -37,6 +37,7 @@ fileselect=require 'fileselect'
 engine.name = 'Sunshine'      -- use the Sunshine SuperCollider engine
 
 include "lib/utilities"       -- load utilities written for this script
+-- include "lib/tests/utilities_test"       -- load unit tests for lib/utilities
 
 local Sun = include "lib/sun" 
 
