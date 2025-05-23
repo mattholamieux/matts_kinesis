@@ -160,8 +160,7 @@ The code is organized hierarchically like so:
 * Change default grain mode from live to recorded
   * Find the comment in sun_mode_2.lua: "switch to granulate an audio file by default"
   * Uncomment the two lines that set the `sample` and `grain_mode` params
-  * Be sure to add a file path to the audio file on your norns that you want to be granulated by default (see the note in the code)
-* Add code to stop and restart a recording without erasing it
+  * Be sure to add a file path to the audio file on your norns that you want to be granulated by default (see the note in the code.)
 
 ### sun_mode_3.lua
 * With K1+K3: switch the 2nd sun to mode 3
@@ -175,6 +174,9 @@ The code is organized hierarchically like so:
 * Callbacks
   * Uncomment the print statements in the `sun_mode_3.photon_changed` and `sun_mode_3.ray_changed` functions. Restart the script and move the photons around with E3 to understand the conditions when these print statements trigger?
 ## Intermediate/advanced modifications/explorations
-### sun_mode_.lua (softcut)
-### Understanding the code better 
+### Understanding the code better with print statements
 There are a number of print statements throughout the code that have been commented out. try uncommenting some of them and try to understand the data being printed (e.g. what is the data used for in the code?)
+### sun_mode_1.lua (softcut)
+* Add a trigger to stop and restart live audio recording without erasing existing audio in the softcut buffer. 
+### sun_mode_2.lua (granular)
+* Make use of the unused Lattice code in the sun_mode_2.lua file
