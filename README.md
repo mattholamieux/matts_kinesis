@@ -14,7 +14,7 @@ Also, extensive comments have been added to the code that help explain how it wo
 * Load the script
 
 
-# General tips and tricks for learning norns scripting (*abbridged version*)
+# General tips and tricks for learning norns scripting (*abridged version*)
 * Have the the norns [reference](https://monome.org/docs/norns/reference/) or [api](https://monome.org/docs/norns/api/index.html) documents open on your computer at all times. Review them frequently. 
 * Find a relevant [norns study](https://monome.org/docs/norns/studies/).
 * Review the code in an existing script that does something similar to what you are want to do. [norns.community ](https://norns.community)is a great resource for finding scripts.
