@@ -14,6 +14,14 @@ Also, extensive comments have been added to the code that help explain how it wo
 * Load the script
 
 
+# General tips and tricks for learning norns scripting (*abbridged version*)
+* Review the norns [reference](https://monome.org/docs/norns/reference/) and [api](https://monome.org/docs/norns/api/index.html) documents. 
+* Find a relevant [norns study](https://monome.org/docs/norns/studies/).
+* Review the code in an existing script that does something similar to what you are want to do. [norns.community ](https://norns.community)is a great resource for finding scripts.
+* Ask on lines, for example, in [norns: scripting](https://llllllll.co/t/norns-scripting/14120).
+* Ask on lines discord (<insert link>).
+* If you begin to feel frustrated, take a walk. Notice what a beautiful world we live in. Wait for the solution to magically appear, from the sky, delivered by a couple of birds just passing by.
+
 # Quick start
 
 The interface uses the metaphor of the sun, its rays and photons. The script provides two suns that can operate in different modes.
@@ -124,8 +132,8 @@ The code is organized hierarchically like so:
 * utilities.lua: misc lua functions used by multiple files
 
 ## Things to keep in mind while modifying the script
-* Reload the script after making each of the modifications below. also, changes to SuperCollider code require restarting the norns.
-* Try to only make one change at a time, reloading the script after every change. That way if something isn't working, it is easier to revert back to the last known working state.
+* Reload the script after making each of the modifications below. Also, changes to SuperCollider code require restarting the norns.
+* Try to only make one change at a time, reloading the script after every change. That way, if something isn't working it will be easier to revert back to the last known working state.
 
 ## Simple modifications/explorations
 ### kinesis.lua
@@ -140,7 +148,7 @@ The code is organized hierarchically like so:
 ### sun_mode_1.lua (softcut)
 * Softcut rate
   * Find the code at the bottom of the sun_mode_1.lua file that changes softcut rate and modify the values.
-* Other things to try:
+* Try modifying other softcut functions:
   * `softcut.position(2,0)`
   * `softcut.rate_slew_time (2,5)`
   * `softcut.rec_level (2,0.5);softcut.pre_level(2,0.5)`
