@@ -6,18 +6,16 @@ The notes below cover installation, quick start (for making sounds) and some ide
 
 Also, extensive comments have been added to the code that help explain how it works and provide suggestions for further modification/exploration. Look for the robot guy in the code (-- [[ 0_0 ]] --) that indicates ideas for modification.
 
-<>
 
-########################################
 # Installation
-########################################
+
 * `;install https://github.com/jaseknighter/kinesis`
 * Restart norns 
 * Load the script
 
-########################################
+
 # Quick start
-########################################
+
 The kinesis script uses the metaphor of the sun, its rays and photons for its interface. The script provides two suns that can operate in different modes.
 
 By default:
@@ -110,9 +108,9 @@ Each sun can operate in one of four modes
   * Sound behavior: nothing by default. up to you to define
   * UI behavior: same as mode 1
 
-########################################
+
 # Modifying and exploring the script
-########################################
+
 ## About the code
 Conceptually, and as mentioned above, the script is made up two "suns" and each sun operates independently in one of four modes:
 
