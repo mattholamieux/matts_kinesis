@@ -165,7 +165,7 @@ function sun_mode_2.init(self)
 
   -- Switch to granulate an audio file by default
   -- Note: a file path will look something like: `/home/we/dust/audio/my_file.wav`
-  -- params:set("sample"..self.index, "<insert file path")  
+  -- params:set("sample"..self.index, "<insert file path>")  
   -- params:set("grain_mode"..self.index, 2)
 
 

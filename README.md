@@ -158,9 +158,9 @@ The code is organized hierarchically like so:
   * Change the default values for other engine commands
   * Replace one of the commands in the engine_commands table with the `engine.buf_win_end` command
 * Change default grain mode from live to recorded
-  * Find the comment in sun_mode_2.lua "switch to granulate an audio file by default"
+  * Find the comment in sun_mode_2.lua: "switch to granulate an audio file by default"
   * Uncomment the two lines that set the `sample` and `grain_mode` params
-  * Be sure to add a file path to a file on your norns (see the note in the code)
+  * Be sure to add a file path to the audio file on your norns that you want to be granulated by default (see the note in the code)
 * Add code to stop and restart a recording without erasing it
 
 ### sun_mode_3.lua
