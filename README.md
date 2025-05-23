@@ -16,6 +16,7 @@ Also, extensive comments have been added to the code that help explain how it wo
 
 # General tips and tricks for learning norns scripting (*abridged version*)
 * Have the the norns [reference](https://monome.org/docs/norns/reference/) or [api](https://monome.org/docs/norns/api/index.html) documents open on your computer at all times. Review them frequently. 
+* Become familiar with the [Lua](https://www.lua.org/pil/contents.html) and [SuperCollider](https://doc.sccode.org) reference materials.
 * Find a relevant [norns study](https://monome.org/docs/norns/studies/).
 * Review the code in an existing script that does something similar to what you are want to do. [norns.community ](https://norns.community)is a great resource for finding scripts.
 * Ask on lines, for example, in [norns: scripting](https://llllllll.co/t/norns-scripting/14120).
@@ -140,7 +141,7 @@ The code is organized hierarchically like so:
 ### kinesis.lua
 * Change the value of the `sun_modes` variable in the kinesis.lua file so the suns start in with a different mode (use values `1`,`2`,`3`, or `4`) 
 * Uncomment the print statements in the `key` and `enc` functions, then restart the script and observe the values in the [REPL](https://monome.org/docs/norns/maiden/#repl) that are printed when pressing a key or turning an encoder.
-  * Add an if/then statement around the print statement for the `enc` function so it only prints when enc 1 is turned.
+  * In the the `enc` function, modify the `print` statement so it only prints when enc 1 is turned (e.g. using [`if/then`](https://www.lua.org/pil/4.3.1.html)).
 ### sun.lua
 * Change the number of rays (`NUM_RAYS`)
 * Change the number of photons per ray (`PHOTONS_PER_RAY`)
