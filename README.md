@@ -19,7 +19,7 @@ Also, extensive comments have been added to the code that help explain how it wo
 * Find a relevant [norns study](https://monome.org/docs/norns/studies/).
 * Review the code in an existing script that does something similar to what you are want to do. [norns.community ](https://norns.community)is a great resource for finding scripts.
 * Ask on lines, for example, in [norns: scripting](https://llllllll.co/t/norns-scripting/14120).
-* Ask on lines discord (insert link).
+* Ask on lines discord.
 * If you begin to feel frustrated, take a walk. Notice what a beautiful world we live in. Wait for the solution to magically appear, from the sky, delivered by a couple of birds just passing by.
 
 # Quick start
