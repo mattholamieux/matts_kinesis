@@ -96,10 +96,10 @@ Each sun can operate in one of four modes
 
 | Mode | UI behavior | Sound behavior
 | --- | --- | --- |
-| Mode 1 | softcut rate switching | turning E2 or E3 moves photons around the sun |
-| Mode 2  | live/recorded granular synthesis | the movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray |
-| Mode 3 | nothing by default. up to you to define | encoders activate one or more photon(s) moving around its sun |
-| Mode 4 | nothing by default. up to you to define | same as mode 1 |
+| 1 | Softcut rate switching | Turning E2 or E3 moves photons around the sun |
+| 2  | Live/recorded granular synthesis | The movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray |
+| 3 | Nothing by default. Up to you to define | Encoders activate one or more photon(s) moving around its sun |
+| 4 | Nothing by default. Up to you to define | Same as mode 1 |
 
 
   
