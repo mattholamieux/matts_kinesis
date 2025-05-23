@@ -94,18 +94,18 @@ K1 + K2/K3: switch the mode of the sun 1/sun2
 
 Each sun can operate in one of four modes
 
-* Mode 1
-  * Sound behavior: softcut rate switching
-  * UI behavior: turning E2 or E3 moves photons around the sun
-* Mode 2 
-  * Sound behavior: live/recorded granular synthesis
-  * UI behavior: the movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray
-* Mode 3
-  * Sound behavior: nothing by default. up to you to define
-  * UI behavior: encoders activate one or more photon(s) moving around its sun
-* Mode 4
-  * Sound behavior: nothing by default. up to you to define
-  * UI behavior: same as mode 1
+| Mode | UI behavior | Sound behavior
+| --- | --- | --- |
+| Mode 1 | softcut rate switching | turning E2 or E3 moves photons around the sun |
+| Mode 2  | live/recorded granular synthesis | the movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray |
+| Mode 3 | nothing by default. up to you to define | encoders activate one or more photon(s) moving around its sun |
+| Mode 4 | nothing by default. up to you to define | same as mode 1 |
+
+
+  
+  
+  
+  
 
 
 # Modifying and exploring the script
