@@ -16,7 +16,7 @@ Also, extensive comments have been added to the code that help explain how it wo
 
 # Quick start
 
-The kinesis script uses the metaphor of the sun, its rays and photons for its interface. The script provides two suns that can operate in different modes.
+The interface uses the metaphor of the sun, its rays and photons. The script provides two suns that can operate in different modes.
 
 By default:
 
