@@ -92,10 +92,10 @@ To stop rate switching, turn E3 in the opposite direction.
 ## Switching sun modes
 K1 + K2/K3: switch the mode of the sun 1/sun2
 
-Each sun can operate in one of four modes
+Each sun can operate in one of four modes:
 
 | Mode | UI behavior | Sound behavior
-| --- | --- | --- |
+| --- | --------------------------- | --- |
 | 1 | Softcut rate switching | Turning E2 or E3 moves photons around the sun |
 | 2  | Live/recorded granular synthesis | The movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray |
 | 3 | Nothing by default. Up to you to define | Encoders activate one or more photon(s) moving around its sun |
