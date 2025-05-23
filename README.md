@@ -95,7 +95,7 @@ K1 + K2/K3: switch the mode of the sun 1/sun2
 Each sun can operate in one of four modes:
 
 | Mode | UI behavior | Sound behavior
-| --- | --------------------------- | --- |
+| --- | --- | --- |
 | 1 | Softcut rate switching | Turning E2 or E3 moves photons around the sun |
 | 2  | Live/recorded granular synthesis | The movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray |
 | 3 | Nothing by default. Up to you to define | Encoders activate one or more photon(s) moving around its sun |
@@ -118,10 +118,10 @@ The code is organized hierarchically like so:
 * kinesis.lua: the main file for the script (containing the `init` function norns will run when the script is first loaded.)
   * sun.lua: sets the visual elements of the sun (e.g., number of rays) and handles the switching between the different modes (see the `Sun:enc` function)
   * sun_mode_X.lua: the ui and sound behavior is defined in these four files
-  * ray.lua: code for setting the size and position of each of the sun's rays.
-  * photon.lua: code for each of the sun's "photons."  
-* Engine_sunshine.sc: SuperCollider granular synth engine.
-* utilities.lua: misc lua functions used by multiple files.
+  * ray.lua: code for setting the size and position of each of the sun's rays
+  * photon.lua: code for each of the sun's "photons"  
+* Engine_sunshine.sc: SuperCollider granular synth engine
+* utilities.lua: misc lua functions used by multiple files
 
 ## Things to keep in mind while modifying the script
 * Reload the script after making each of the modifications below. also, changes to SuperCollider code require restarting the norns.
