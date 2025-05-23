@@ -133,6 +133,7 @@ The code is organized hierarchically like so:
 
 ## Things to keep in mind while modifying the script
 * Reload the script after making each of the modifications below. Also, changes to SuperCollider code require restarting the norns.
+* Have the norns [repl](https://monome.org/docs/norns/maiden/#repl) open so you can see any error messages that occur. Frequently, error messages will tell you exactly where the issue is occurring in the code.
 * Try to only make one change at a time, reloading the script after every change. That way, if something isn't working it will be easier to revert back to the last known working state.
 
 ## Simple modifications/explorations
