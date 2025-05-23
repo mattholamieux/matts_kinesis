@@ -90,8 +90,7 @@ To start softcut rate switching, turn E3 until you see the sun pulsating. The ve
 To stop rate switching, turn E3 in the opposite direction.
 
 ## Switching sun modes
-K1 + K2: switch the mode of the sun 1
-K1 + K3: switch the mode of the sun 2
+K1 + K2/K3: switch the mode of the sun 1/sun2
 
 Each sun can operate in one of four modes
 
