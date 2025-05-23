@@ -129,6 +129,7 @@ The code is organized hierarchically like so:
 * Reload the script after making each of the modifications listed below. 
 * Restart your norns after making changes to SuperCollider code. Unlike Lua code, imply reloading the script after changing SuperCollider code will not work.
 * Have the norns [repl](https://monome.org/docs/norns/maiden/#repl) open so you can see any error messages that occur. Frequently, error messages will tell you exactly where the issue is occurring in the code.
+* When you encounter an error, try to understand **why** it is happening. Doing something incorrectly and learning from the error is often a very effective learning strategy.
 * Try to only make one change at a time, reloading the script after every change. That way, if something isn't working it will be easier to revert back to the last known working state.
 
 ## Simple modifications/explorations
@@ -143,14 +144,14 @@ The code is organized hierarchically like so:
 * Change some other values that have a robot (-- [[ 0_0 ]] --) indicator next to them and see what difference it makes.
 ### sun_mode_1.lua (softcut)
 * Softcut rate
-  * Find the code at the bottom of the sun_mode_1.lua file that changes softcut rate and modify the values.
+  * Find the code at the bottom of the sun_mode_1.lua file that changes the softcut rate and modify the values.
 * Try modifying other softcut functions:
   * `softcut.position(2,0)`
   * `softcut.rate_slew_time (2,5)`
   * `softcut.rec_level (2,0.5);softcut.pre_level(2,0.5)`
   * `softcut.loop_end(2,1)`
 
-### sun_mode_2.lua (sunshine granular synth, lua code)
+### sun_mode_2.lua (sunshine granular synth, Lua code)
 * Engine initialization
   * Find the `init_engine_commands` function
   * Change the default value for `engine.density`
