@@ -110,21 +110,14 @@ Each sun can operate in one of four modes:
 | 3 | Nothing by default. Up to you to define | Encoders activate one or more photon(s) moving around its sun |
 | 4 | Nothing by default. Up to you to define | Same as mode 1 |
 
-
-  
-  
-  
-  
-
-
 # Modifying and exploring the script
 
 ## About the code
-Conceptually, and as mentioned above, the script is made up two "suns" and each sun operates independently in one of four modes:
+Conceptually, and as mentioned above, the script is made up two "suns." Each sun operates independently in one of the four modes listed above.
 
 The code is organized hierarchically like so:
 
-* kinesis.lua: the main file for the script (containing the `init` function norns will run when the script is first loaded.)
+* kinesis.lua: the main file for the script (containing the `init` function that norns will run when the script is first loaded)
   * sun.lua: sets the visual elements of the sun (e.g., number of rays) and handles the switching between the different modes (see the `Sun:enc` function)
   * sun_mode_X.lua: the ui and sound behavior is defined in these four files
   * ray.lua: code for setting the size and position of each of the sun's rays
@@ -133,7 +126,8 @@ The code is organized hierarchically like so:
 * utilities.lua: misc lua functions used by multiple files
 
 ## Things to keep in mind while modifying the script
-* Reload the script after making each of the modifications below. Also, changes to SuperCollider code require restarting the norns.
+* Reload the script after making each of the modifications listed below. 
+* Restart your norns after making changes to SuperCollider code. Unlike Lua code, imply reloading the script after changing SuperCollider code will not work.
 * Have the norns [repl](https://monome.org/docs/norns/maiden/#repl) open so you can see any error messages that occur. Frequently, error messages will tell you exactly where the issue is occurring in the code.
 * Try to only make one change at a time, reloading the script after every change. That way, if something isn't working it will be easier to revert back to the last known working state.
 
