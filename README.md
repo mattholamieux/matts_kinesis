@@ -1,5 +1,3 @@
-![](images/kinesis1.png)
-
 This script is a modification of @jaseknighter's kinesis script, which was written for the 2025 habitus workshops and is meant to be tinkered with by folks with a beginning to intermediate level of norns-scripting  experience (e.g. me)
 
 Major additions to the original kinesis script include an additional sun mode and added grid support. 
