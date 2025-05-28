@@ -3,11 +3,11 @@
     "version": 1,
     "kind": "project_metadata"
   },
-  "installed_on": "2025-05-24T20:08:33.17564625+01:00",
+  "installed_on": "2025-05-28T02:08:46.664879742+01:00",
   "updated_on": "0001-01-01T00:00:00Z",
-  "project_url": "https://github.com/jaseknighter/kinesis",
+  "project_url": "https://github.com/mattholamieux/matts_kinesis",
   "catalog_entry": {
-    "project_name": "kinesis",
+    "project_name": "matts_kinesis",
     "description": ""
   }
 }

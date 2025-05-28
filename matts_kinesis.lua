@@ -1,4 +1,6 @@
--- matt's kinesis: built on top of jaseknighter's kinesis script as part of habitus workshop
+-- matt's kinesis: built on top of 
+-- jaseknighter's kinesis script 
+-- as part of habitus workshop
 -- 0.1 @mbn
 
 
