@@ -1,182 +1,42 @@
 ![](images/kinesis1.png)
 
-Although musical out of the box, the kinesis script was written for the 2025 habitus workshops and is meant to be tinkered with by folks with a beginning to intermediate level of norns-scripting  experience...for example, folks who have completed the [norns studies](https://monome.org/docs/norns/studies/) but aren't quite ready to create a whole script from scratch.
+This script is a modification of @jaseknighter's kinesis script, which was written for the 2025 habitus workshops and is meant to be tinkered with by folks with a beginning to intermediate level of norns-scripting  experience (e.g. me)
 
-The notes below cover installation, quick start (for making sounds) and some ideas for modifying the script.
+Major additions to the original kinesis script include an additional sun mode and added grid support. 
 
-Also, extensive comments have been added to the code that help explain how it works and provide suggestions for further modification/exploration. Look for the robot guy in the code (-- [[ 0_0 ]] --) that indicates ideas for modification.
+As in the original script, use E2 and E3 to change values for the selected parameter for the respective sun. Use E2 and E3 while holding K1 to switch between params for the respective sun. Please see the github page for the original script for more in-depth explanation of kinesis: https://github.com/jaseknighter/kinesis
 
 
 # Installation
-
-* `;install https://github.com/jaseknighter/kinesis`
+* `;install https://github.com/mattholamieux/matts_kinesis`
 * Restart norns 
 * Load the script
 
 
-# General tips and tricks for learning norns scripting (*abridged version*)
-* Have the the norns [reference](https://monome.org/docs/norns/reference/) or [api](https://monome.org/docs/norns/api/index.html) documents open on your computer at all times. Review them frequently. 
-* Become familiar with the [Lua](https://www.lua.org/pil/contents.html) and [SuperCollider](https://doc.sccode.org) reference materials.
-* Find a relevant [norns study](https://monome.org/docs/norns/studies/).
-* Review the code in an existing script that does something similar to what you are want to do. [norns.community ](https://norns.community)is a great resource for finding scripts.
-* Ask on lines, for example, in [norns: scripting](https://llllllll.co/t/norns-scripting/14120).
-* Ask on lines discord.
-* If you begin to feel frustrated, take a walk. Notice what a beautiful world we live in. Wait for the solution to magically appear, from the sky, delivered by a couple of birds just passing by.
+# Differences from original kinesis script
 
-# Quick start
-
-The interface uses the metaphor of the sun, its rays and photons. The script provides two suns that can operate in different modes.
-
-By default:
-
-* The left sun is set to granulate audio from norns input (using a new SuperCollider engine called `sunshine`)
-* The right sun processes audio with softcut
-
-## Sun 1: granulate audio
-![](images/kinesis_granular_mode2.png)
-
-On load, the sunshine engine immediately starts granulating the norns' audio input. each ray controls a different grain synth param (aka "engine command"). You can also granulate pre-recorded audio (see below for details.)
-
-This granular synth engine uses SuperCollider's [GrainBuf](https://doc.sccode.org/Classes/GrainBuf.html) UGen. GrainBuf granulates audio using sound stored in a [buffer](https://doc.sccode.org/Classes/Buffer.html).
-
-K1+E2: switch between grain synth params.
-
-The name of the grain synth param and its value are shown on the screen to the right of the sun at the top and bottom. The param names are abbreviated:
-
-* "sp": `engine.speed` (the rate of the grain synth's playhead.default: 1)
-* "dn": `engine.density` (the rate of grain generation. default: 1 grain per second)
-* "ps": `engine.pos` (the playhead's position in the buffer)
-* "sz": `engine.size` (the size of the granulated sample taken from the buffer. default: 0.1)
-* "jt": `engine.jitter` (causes the playhead to randomly jump within the buffer. default: 0)
-* "ge": `engine.env_shape` (the shape of the grain envelope...see below for details. default: 6)
-* "rl": `engine.rec_level` (the amount of new audio recording into the buffer. default: 1)
-* "pl": `engine.pre_level` (the amount of existing audio to be retained the buffer. default: 0)
-<!-- * "we": `engine.buf_win_end` (size of the window that can be granulated. default: 1) -->
-
-### Grain envelopes
-The ray controlling the grain envelopes (`ge`), switches between six engelope shapes:
-* Exponential (ray value: 1.0)
-* Squared (ray value: 2.0)
-* Linear (ray value: 3.0)
-* Sine (ray value: 4.0)
-* Cubed (ray value: 5.0)
-* Welch (ray value: 6.0)
-
-Note: exponential envelopes are the most percussive.
-
-### Record and play engine command modulations
-* Select a param (using K1+E2)
-* Press K2 to start recording (notice the `-` changes to `+`)
-* Turn E2 to record some param changes
-* Press K2 to end recording (notice the `+` changes back to `-`) 
-
-### Erase engine command modulations
-* Press K2 twice to clear the recording of the selected engine command
-
-### Freeze grains
-* Let the grains emit for about 10 seconds to fill the recording buffer
-* Set speed (sp) to 0
-* Set pre-record level to 1 (pl)
-* Set record level to 0 (rl)
-* Change the position param (ps) to scrub the play head 
-
-Alternatively, use the `freeze grains` trigger in the params menu. 
-
-### Reset grain phase
-The `reset grain phase` trigger in the params menu regenerates the supercollider grain player. It is meant to be used to sync the beat of the grains with other music (e.g. when playing in an ensemble.)
-
-### Switch from "live" to "recorded" mode to play an audio file
-* Select an audio file with the `sample` param file selector
-* Set mode to `recorded` with the `set mode` param
-
-## Sun 2: audio mangling with softcut
-![](images/kinesis_softcut_mode1.png)
-
-By default, the 2nd sun is configured to switch the softcut rate between 1 and 2. It is triggered when the lighted photon arrives at every other ray.
-
-To start softcut rate switching, turn E3 until you see the sun pulsating. The velocity at which you turn E3 gets translated into the speed at which the softcut rate switches between 1 and 2.
-
-To stop rate switching, turn E3 in the opposite direction.
-
-## Switching sun modes
-K1 + K2/K3: switch the mode of the sun 1/sun2
-
-Each sun can operate in one of four modes:
-
-| Mode | UI behavior | Sound behavior
-| --- | --- | --- |
-| 1 | Softcut rate switching | Turning E2 or E3 moves photons around the sun |
-| 2  | Live/recorded granular synthesis | The movement of photons in each ray controls the value of the SuperCollider engine command mapped to the ray |
-| 3 | Nothing by default. Up to you to define | Encoders activate one or more photon(s) moving around its sun |
-| 4 | Nothing by default. Up to you to define | Same as mode 1 |
-
-# Modifying and exploring the script
-
-## About the code
-Conceptually, and as mentioned above, the script is made up two "suns." Each sun operates independently in one of the four modes listed above.
-
-The code is organized hierarchically like so:
-
-* kinesis.lua: the main file for the script (containing the `init` function that norns will run when the script is first loaded)
-  * sun.lua: sets the visual elements of the sun (e.g., number of rays) and handles the switching between the different modes (see the `Sun:enc` function)
-  * sun_mode_X.lua: the ui and sound behavior is defined in these four files
-  * ray.lua: code for setting the size and position of each of the sun's rays
-  * photon.lua: code for each of the sun's "photons"  
-* Engine_sunshine.sc: SuperCollider granular synth engine
-* utilities.lua: misc lua functions used by multiple files
-
-## Things to keep in mind while modifying the script
-* Reload the script after making each of the modifications listed below. 
-* Restart your norns after making changes to SuperCollider code. Unlike Lua code, imply reloading the script after changing SuperCollider code will not work.
-* Have the norns [repl](https://monome.org/docs/norns/maiden/#repl) open so you can see any error messages that occur. Frequently, error messages will tell you exactly where the issue is occurring in the code.
-* When you encounter an error, try to understand **why** it is happening. Doing something incorrectly and learning from the error is often a very effective learning strategy.
-* Try to only make one change at a time, reloading the script after every change. That way, if something isn't working it will be easier to revert back to the last known working state.
-
-## Simple modifications/explorations
-### kinesis.lua
-* Change the value of the `sun_modes` variable in the kinesis.lua file so the suns start in with a different mode (use values `1`,`2`,`3`, or `4`) 
-* Uncomment the print statements in the `key` and `enc` functions, then restart the script and observe the values in the [REPL](https://monome.org/docs/norns/maiden/#repl) that are printed when pressing a key or turning an encoder.
-  * In the the `enc` function, modify the `print` statement so it only prints when enc 1 is turned (e.g. using [`if/then`](https://www.lua.org/pil/4.3.1.html)).
-### sun.lua
-* Change the number of rays (`NUM_RAYS`)
-* Change the number of photons per ray (`PHOTONS_PER_RAY`)
-* Change the sun radius (`SUN_RADIUS`)
-* Change some other values that have a robot (-- [[ 0_0 ]] --) indicator next to them and see what difference it makes.
-### sun_mode_1.lua (softcut)
-* Softcut rate
-  * Find the code at the bottom of the sun_mode_1.lua file that changes the softcut rate and modify the values.
-* Try modifying other softcut functions:
-  * `softcut.position(2,0)`
-  * `softcut.rate_slew_time (2,5)`
-  * `softcut.rec_level (2,0.5);softcut.pre_level(2,0.5)`
-  * `softcut.loop_end(2,1)`
-
-### sun_mode_2.lua (sunshine granular synth, Lua code)
-* Engine initialization
-  * Find the `init_engine_commands` function
-  * Change the default value for `engine.density`
-  * Change the default values for other engine commands
-  * Replace one of the commands in the engine_commands table with the `engine.buf_win_end` command
-* Change default grain mode from live to recorded
-  * Find the comment in sun_mode_2.lua: "switch to granulate an audio file by default"
-  * Uncomment the two lines that set the `sample` and `grain_mode` params
-  * Be sure to add a file path to the audio file on your norns that you want to be granulated by default (see the note in the code.)
-
-### sun_mode_3.lua
-* With K1+K3: switch the 2nd sun to mode 3
-* Photon velocity
-  * In the REPL, run `suns[2]:set_velocity_manual(1)`
-  * What happens when different values are passed to the function (e.g., `suns[2]:set_velocity_manual(-10)`)?
-  * Review the `set_velocity_manual` function in sun.lua to understand how it works
-  * Review the `sign` function in utilities.lua to understand how it gets used by `set_velocity_manual`.
-* Active photons
-  * Play with the `active_photons` variable. what happens if the initial values are changed? what happens if there are fewer or additional values in the `active_photons` table?
-* Callbacks
-  * Uncomment the print statements in the `sun_mode_3.photon_changed` and `sun_mode_3.ray_changed` functions. Restart the script and move the photons around with E3 to understand the conditions when these print statements trigger?
-## Intermediate/advanced modifications/explorations
-### Understanding the code better with print statements
-There are a number of print statements throughout the code that have been commented out. try uncommenting some of them and try to understand the data being printed (e.g. what is the data used for in the code?)
-### sun_mode_1.lua (softcut)
-* Add a trigger to stop and restart live audio recording without erasing existing audio in the softcut buffer. 
-### sun_mode_2.lua (granular)
-* Make use of the unused Lattice code in the sun_mode_2.lua file
+* This version of kinesis includes two sun modes, which are not swappable:
+  * The LEFT SUN is set to granulate audio from norns input (this is sun mode 2 from the original kinesis) and includes the following parameters:
+    * "sp": `engine.speed` (the rate of the grain synth's playhead.default: 1)
+    * "dn": `engine.density` (the rate of grain generation. default: 1 grain per second)
+    * "ps": `engine.pos` (the playhead's position in the buffer)
+    * "sz": `engine.size` (the size of the granulated sample taken from the buffer. default: 0.1)
+    * "jt": `engine.jitter` (causes the playhead to randomly jump within the buffer. default: 0)
+    * "ge": `engine.env_shape` (the shape of the grain envelope...see below for details. default: 6)
+    * "rl": `engine.rec_level` (the amount of new audio recording into the buffer. default: 1)
+    * "pl": `engine.pre_level` (the amount of existing audio to be retained the buffer. default: 0)
+  * The RIGHT SUN processes the audio from the left sun via a stereo varispeed delay, using softcut. It includes the following parameters:
+    * "l1": `length one` (the length of the delay for the first stereo channel)
+    * "l2": `length two` (the length of the delay for the second stereo channel)
+    * "r1": `rate one` (the rate of the first channel)
+    * "r2": `rate two` (the rate of the second channel)
+    * "c1": `cutoff one` (filter cutoff frequency of first channel)
+    * "c2": `cutoff two` (filter cutoff frequency of second channel)
+    * "fb": `feedback` (the amount of audio passed back into the record buffer. at 100% this freezes the contents of the softcut buffer and stops recording new audio)
+    * "sp": `spread` (the pan positions of the two channels)
+* All parameters of both suns can be changed using the norns encoders (as in the original script), but they can also be changed using a connected grid. With a grid connected, each column acts like a fader. Columns 1-8 control the parameters of the LEFT SUN, while columns 9-16 control parameters of the RIGHT SUN. 
+* Recording param changes is slightly altered in this version of kinesis:
+  * Press K2 or K3 to enable recording of param changes to the LEFT SUN or RIGHT SUN respectively, either via the encoders or the grid. 
+  * Press K2 or K3 again to end recording for the respective sun and begin playing back automation.
+  * Repeat to overdub additional param changes.
+  * Press K2 or K3 while holding K1 to clear param automation for the respective sun.
