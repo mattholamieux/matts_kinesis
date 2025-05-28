@@ -231,6 +231,16 @@ function sun_mode_2.get_next_ray(self, delta)
 end
 
 ------------------------------------------
+-- Grid handler
+------------------------------------------
+function sun_mode_2.grid(self, x, y, z)
+  -- Adjust reflector cursor for the relevant reflector.
+  self.selected_ray = (x*2)-1
+  sun_mode_2.set_reflector_cursor_grid(self, self.selected_ray, y)
+  sun_mode_2.draw_reflector_cursor(self, self.selected_ray)
+end
+
+------------------------------------------
 -- Encoder handler
 ------------------------------------------
 function sun_mode_2.enc(self, n, delta)
@@ -253,6 +263,7 @@ function sun_mode_2.enc(self, n, delta)
       sun_mode_2.select_reflector(self, self.selected_ray)
       sun_mode_2.draw_reflector_cursor(self, self.selected_ray)
     else
+      print('sun 2 encoder '..self.selected_ray, delta)
       -- Adjust reflector cursor for the selected reflector.
       sun_mode_2.set_reflector_cursor_rel(self, self.selected_ray, delta)
       sun_mode_2.draw_reflector_cursor(self, self.selected_ray)
@@ -263,49 +274,108 @@ end
 ------------------------------------------
 -- Key handler
 ------------------------------------------
+
 function sun_mode_2.key(self, n, z)
-  local reflector_id = self.selected_ray
-  if self.state == 1 then  -- Record state
-    if self.record[reflector_id] == 1 and z == 0 then
-      self.record[reflector_id] = 0
-      self.reflectors[reflector_id]:set_rec(0)
-      print("key: stop reflector recording")    
-    elseif self.record[reflector_id] == 0 and z == 0 then
-      print("key: start reflector recording",reflector_id,self.reflectors[reflector_id])
-      self.record[reflector_id] = 1
+  -- local reflector_id = self.selected_ray
+  if alt_key == true then
+    for i=1, 15, 2 do
+      local reflector_id = i
       self.reflectors[reflector_id]:clear()
-      self.reflectors[reflector_id]:set_rec(1)
     end
-  elseif self.state == 2 then -- Play state
-    if z == 0 then
-      if n == 2 then
-        if self.play[reflector_id] == 1 then
-          self.play[reflector_id] = 0
-          print("toggle_play: stop reflector playing", reflector_id)
-          if self.reflectors[reflector_id] and self.reflectors[reflector_id].stop then
-            self.reflectors[reflector_id]:stop()
+  else
+    for i=1, 15 do
+      local reflector_id = i
+      if self.state == 1 then  -- Record state
+        if self.record[reflector_id] == 1 and z == 0 then
+          self.record[reflector_id] = 0
+          self.reflectors[reflector_id]:set_rec(0)
+          print("key: stop reflector recording")    
+        elseif self.record[reflector_id] == 0 and z == 0 then
+          print("key: start reflector recording",reflector_id,self.reflectors[reflector_id])
+          self.record[reflector_id] = 1
+          if self.reflectors[reflector_id].count < 1 then
+            self.reflectors[reflector_id]:clear()
           end
-        else
-          self.play[reflector_id] = 1
-          print("toggle_play: start reflector playing", reflector_id)
-          if self.reflectors[reflector_id] and self.reflectors[reflector_id].start then
-            self.reflectors[reflector_id]:start()
-          end
+          -- self.reflectors[reflector_id]:clear()
+          self.reflectors[reflector_id]:set_rec(1)
+       end
+      elseif self.state == 2 then -- Play state
+        if z == 0 then
+          if n == 2 then
+            if self.play[reflector_id] == 1 then
+              self.play[reflector_id] = 0
+             print("toggle_play: stop reflector playing", reflector_id)
+             if self.reflectors[reflector_id] and self.reflectors[reflector_id].stop then
+               self.reflectors[reflector_id]:stop()
+             end
+           else
+             self.play[reflector_id] = 1
+             print("toggle_play: start reflector playing", reflector_id)
+             if self.reflectors[reflector_id] and self.reflectors[reflector_id].start then
+               self.reflectors[reflector_id]:start()
+             end
+           end
+         end
+        end
+      elseif self.state == 3 then  -- Loop state
+       if self.loop[reflector_id] == 1 and z == 0 then
+         self.loop[reflector_id] = 0
+          print("key: stop reflector looping")
+          self.reflectors[reflector_id]:set_loop(0)
+        elseif self.loop[reflector_id] == 0 and z == 0 then
+          self.loop[reflector_id] = 1
+          print("key: start reflector looping")
+          self.reflectors[reflector_id]:set_loop(1)
         end
       end
     end
-  elseif self.state == 3 then  -- Loop state
-    if self.loop[reflector_id] == 1 and z == 0 then
-      self.loop[reflector_id] = 0
-      print("key: stop reflector looping")
-      self.reflectors[reflector_id]:set_loop(0)
-    elseif self.loop[reflector_id] == 0 and z == 0 then
-      self.loop[reflector_id] = 1
-      print("key: start reflector looping")
-      self.reflectors[reflector_id]:set_loop(1)
-    end
   end
 end
+
+-- function sun_mode_2.key(self, n, z)
+--   local reflector_id = self.selected_ray
+--   if self.state == 1 then  -- Record state
+--     if self.record[reflector_id] == 1 and z == 0 then
+      
+--       self.record[reflector_id] = 0
+--       self.reflectors[reflector_id]:set_rec(0)
+--       print("key: stop reflector recording")    
+--     elseif self.record[reflector_id] == 0 and z == 0 then
+--       print("key: start reflector recording",reflector_id,self.reflectors[reflector_id])
+--       self.record[reflector_id] = 1
+--       self.reflectors[reflector_id]:clear()
+--       self.reflectors[reflector_id]:set_rec(1)
+--     end
+--   elseif self.state == 2 then -- Play state
+--     if z == 0 then
+--       if n == 2 then
+--         if self.play[reflector_id] == 1 then
+--           self.play[reflector_id] = 0
+--           print("toggle_play: stop reflector playing", reflector_id)
+--           if self.reflectors[reflector_id] and self.reflectors[reflector_id].stop then
+--             self.reflectors[reflector_id]:stop()
+--           end
+--         else
+--           self.play[reflector_id] = 1
+--           print("toggle_play: start reflector playing", reflector_id)
+--           if self.reflectors[reflector_id] and self.reflectors[reflector_id].start then
+--             self.reflectors[reflector_id]:start()
+--           end
+--         end
+--       end
+--     end
+--   elseif self.state == 3 then  -- Loop state
+--     if self.loop[reflector_id] == 1 and z == 0 then
+--       self.loop[reflector_id] = 0
+--       print("key: stop reflector looping")
+--       self.reflectors[reflector_id]:set_loop(0)
+--     elseif self.loop[reflector_id] == 0 and z == 0 then
+--       self.loop[reflector_id] = 1
+--       print("key: start reflector looping")
+--       self.reflectors[reflector_id]:set_loop(1)
+--     end
+--   end
+-- end
 
 ------------------------------------------
 -- Get last selected photon for a reflector
@@ -363,7 +433,7 @@ function sun_mode_2.set_reflector_cursor(self, reflector_id, val)
   end
   
   self.reflection_indices[reflector_id].reflection_cursor = val
-  -- print("set_reflector_cursor", reflector_id, val)
+  print("set_reflector_cursor", reflector_id, val)
   sun_mode_2.draw_reflector_cursor(self, reflector_id)
 end
 
@@ -371,6 +441,7 @@ end
 -- Set reflector cursor (relative)
 ------------------------------------------
 function sun_mode_2.set_reflector_cursor_rel(self, reflector_id, delta)
+  print("set_reflector_cursor", reflector_id, delta)
   if not self.reflection_indices[reflector_id] then
     self.reflection_indices[reflector_id] = { reflection_cursor = 1 }
   end
@@ -384,6 +455,25 @@ function sun_mode_2.set_reflector_cursor_rel(self, reflector_id, delta)
   -- pass the event value to the router
   sun_mode_2.event_router(self, reflector_id, "process", new_data.value)
 
+end
+
+------------------------------------------
+-- Set reflector cursor (GRID)
+------------------------------------------
+function sun_mode_2.set_reflector_cursor_grid(self, reflector_id, val)
+  if not self.reflection_indices[reflector_id] then
+    self.reflection_indices[reflector_id] = { reflection_cursor = 1 }
+  end
+  local new_val = 9-val
+  local cursor = self.reflection_indices[reflector_id].reflection_cursor
+  local new_cursor = util.linlin(1,8, 1, self.max_cursor,new_val)
+  self.reflection_indices[reflector_id].reflection_cursor = new_cursor
+  -- Store reflector data.
+  local new_data = { reflector = reflector_id, value = new_cursor } -- IS THIS THE KEY?
+  sun_mode_2.store_reflector_data(self, reflector_id, new_data)
+
+  -- pass the event value to the router
+  sun_mode_2.event_router(self, reflector_id, "process", new_data.value)
 end
 
 ------------------------------------------
@@ -683,7 +773,7 @@ sun_mode_2.init_engine_commands = function (self)
   -- Try replacing one of the params with the one at the bottom (for engine.buf_win_end) that is commented out 
   engine_commands = {
   -- abbr.      engine command       range, rounding       default         
-     { "sp",    engine.speed,        { -5,5,true,0.1 },    1         },
+     { "sp",    engine.speed,        { -2,2,true,0.1 },    1         },
      { "dn",    engine.density,      { 1,40,true },        1         },
      { "ps",    engine.pos,          { 0,1 },              0         },
      { "sz",    engine.size,         { 0.01,0.5 },         0.1       },
@@ -786,7 +876,7 @@ end
 -- Define an event router that consolidates all the reflector events and lattice/sprocket events
 function sun_mode_2.event_router(self, reflector_id, event_type, value)
   local sun = self.index
-  
+  -- print('sun 2 '..reflector_id, value)
   if not self.sprocket_1 or not self.sprocket_2 then return end
 
   if sun == 1 then
@@ -794,17 +884,9 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
       -- Update changes triggered by encoder 3 and/or reflector recordings
       local sc_voice = sun
       sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
-      
+      sun_mode_2_grid_state(reflector_id, value)
     end
 
-    -- [[ 0_0 ]] --
-    -- Unused events (uncomment these events one by one to better understand when they are triggered)
-    -- if event_type == "sprocket"  then --[[ do something with sprocket update]] end
-    -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
-    -- if event_type == "record_start"  then --[[ do something with record_start]] end
-    -- if event_type == "record_end"  then --[[ do something with record_end]] end
-    -- if event_type == "step"      then --[[ do something with step]] end
-    -- if event_type == "pattern_end"   then --[[ do something with pattern_end]] end
   elseif sun == 2 then
     if event_type == "process" then 
       -- Update changes triggered by encoder 3 and/or reflector recordings
@@ -812,15 +894,19 @@ function sun_mode_2.event_router(self, reflector_id, event_type, value)
       sun_mode_2.update_engine(self, sc_voice, reflector_id, value)
     end
 
-    -- [[ 0_0 ]] --
-    -- Unused events (uncomment these events one by one to better understand when they are triggered)
-    -- if event_type == "sprocket"  then --[[ do something with sprocket update]] end
-    -- if event_type == "end_of_loop"  then --[[ do something with end_of_loop]] end
-    -- if event_type == "record_start"  then --[[ do something with record_start]] end
-    -- if event_type == "record_end"  then --[[ do something with record_end]] end
-    -- if event_type == "step"      then --[[ do something with step]] end
-    -- if event_type == "pattern_end"   then --[[ do something with pattern_end]] end
   end
+  -- sun_mode_2_grid_state(reflector_id, value)
+end
+
+
+function sun_mode_2_grid_state(reflector, value)
+  local grid_value = util.round_up(util.linlin(0, 127, 8, 1, value))
+  local x = (reflector+1)/2
+  lit[x] = {}
+  for i=8,grid_value,-1 do
+    lit[x][i] = 1
+  end
+  grid_dirty = true
 end
 
 return sun_mode_2

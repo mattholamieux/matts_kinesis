@@ -16,10 +16,9 @@ local Sun = {}
 Sun.__index = Sun
 
 local sun_modes = {
-  [1] = include "lib/sun_mode_1",
+  -- [1] = include "lib/sun_mode_1",
   [2] = include "lib/sun_mode_2",
-  [3] = include "lib/sun_mode_3",
-  [4] = include "lib/sun_mode_4"
+  [3] = include "lib/sun_mode_3"
 }
 
 -- NOTE: CONSTANT VARIABLES
@@ -70,6 +69,10 @@ end
 
 function Sun:key(n, z)
   sun_modes[self.mode].key(self, n, z)
+end
+
+function Sun:grid(x,y,z)
+  sun_modes[self.mode].grid(self,x,y,z)
 end
 
 function Sun:get_ray_photon(ix)
