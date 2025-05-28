@@ -6,6 +6,7 @@ Major additions to the original kinesis script include an additional sun mode an
 
 As in the original script, use E2 and E3 to change values for the selected parameter for the respective sun. Use E2 and E3 while holding K1 to switch between params for the respective sun. Please see the github page for the original script for more in-depth explanation of kinesis: https://github.com/jaseknighter/kinesis
 
+Huge shoutout to @jaseknighter for answering all my questions during the habitus workshop in Santa Cruz. I learned a ton by working with(in) kinesis with their support!
 
 # Installation
 * `;install https://github.com/mattholamieux/matts_kinesis`
