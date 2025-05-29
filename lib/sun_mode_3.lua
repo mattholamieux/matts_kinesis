@@ -356,7 +356,7 @@ end
 function ramp_val(self, reflector_id,old,target)
   local dir = target > old
     if (dir) then
-      while old < target do
+      while old < target-2 do
         old = old+2
         clock.sleep(0.01)
         grid_dirty = true
@@ -364,7 +364,7 @@ function ramp_val(self, reflector_id,old,target)
         sun_mode_3.event_router(self, reflector_id, "process", old)
       end
     else 
-      while old > target+0.01 do
+      while old > target+2 do
         old = old-2
         clock.sleep(0.01)
         grid_dirty = true
@@ -520,15 +520,6 @@ function sun_mode_3.init_reflectors(self)
       -- update the ui
       sun_mode_3.set_reflector_cursor(self, reflector_id, value)
       
-      
-      -- local old_cursor =self.reflection_indices[reflector_id].reflection_cursor
-      -- -- pass the event value to the router
-      -- -- sun_mode_3.event_router(self, reflector_id, "process", value)
-      -- if reflector_id == 5 or reflector_id == 7 then 
-      --   sun_mode_3.event_router(self, reflector_id, "process", value)
-      -- else
-      --   clock.run(ramp_val, self, reflector_id, old_cursor, value)
-      -- end
 
     end
 
