@@ -126,6 +126,8 @@ function g.key(x,y,z)
 end
 
 
+
+
 function redraw()
   if screen_dirty then 
     screen.clear()                        -- Clear the screen

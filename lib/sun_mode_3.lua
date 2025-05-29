@@ -291,14 +291,21 @@ end
 -- Set reflector cursor (absolute)
 ------------------------------------------
 function sun_mode_3.set_reflector_cursor(self, reflector_id, val)
-  
+  local old_cursor = 0
   if not self.reflection_indices[reflector_id] then
     self.reflection_indices[reflector_id] = { reflection_cursor = 1 }
+  else
+    old_cursor =self.reflection_indices[reflector_id].reflection_cursor
   end
   
   self.reflection_indices[reflector_id].reflection_cursor = val
-  -- print("set_reflector_cursor", reflector_id, val)
+  print("set_reflector_cursor absolue", self.reflection_indices[reflector_id].reflection_cursor)
   sun_mode_3.draw_reflector_cursor(self, reflector_id)
+  if reflector_id == 5 or reflector_id == 7 then 
+    sun_mode_3.event_router(self, reflector_id, "process", val)
+  else
+    clock.run(ramp_val, self, reflector_id, old_cursor, val)
+  end
 end
 
 ------------------------------------------
@@ -324,20 +331,49 @@ end
 -- Set reflector cursor (GRID)
 ------------------------------------------
 function sun_mode_3.set_reflector_cursor_grid(self, reflector_id, val)
+  local old_cursor = 0
   if not self.reflection_indices[reflector_id] then
     self.reflection_indices[reflector_id] = { reflection_cursor = 1 }
+  else
+    old_cursor =self.reflection_indices[reflector_id].reflection_cursor
   end
-  local new_val = 9-val
+  
+  local new_val = 9-val -- invert y values 1-8 > 8-1
   local cursor = self.reflection_indices[reflector_id].reflection_cursor
-  local new_cursor = util.linlin(1,8, 1, self.max_cursor,new_val)
+  local new_cursor = util.linlin(1,8, 1, self.max_cursor,new_val) -- convert y grid press to cursor value
   self.reflection_indices[reflector_id].reflection_cursor = new_cursor
   -- Store reflector data.
-  local new_data = { reflector = reflector_id, value = new_cursor } -- IS THIS THE KEY?
+  local new_data = { reflector = reflector_id, value = new_cursor }
+    -- Store reflector data.
   sun_mode_3.store_reflector_data(self, reflector_id, new_data)
-
-  -- pass the event value to the router
-  sun_mode_3.event_router(self, reflector_id, "process", new_data.value)
+  if reflector_id == 5 or reflector_id == 7 then 
+    sun_mode_3.event_router(self, reflector_id, "process", new_data.value)
+  else
+    clock.run(ramp_val, self, reflector_id, old_cursor, new_data.value)
+  end
 end
+
+function ramp_val(self, reflector_id,old,target)
+  local dir = target > old
+    if (dir) then
+      while old < target do
+        old = old+2
+        clock.sleep(0.01)
+        grid_dirty = true
+        print(old)
+        sun_mode_3.event_router(self, reflector_id, "process", old)
+      end
+    else 
+      while old > target+0.01 do
+        old = old-2
+        clock.sleep(0.01)
+        grid_dirty = true
+        print(old)
+        sun_mode_3.event_router(self, reflector_id, "process", old)
+      end
+    end
+end
+
 
 ------------------------------------------
 -- Deselect a reflector
@@ -483,9 +519,16 @@ function sun_mode_3.init_reflectors(self)
       
       -- update the ui
       sun_mode_3.set_reflector_cursor(self, reflector_id, value)
-
-      -- pass the event value to the router
-      sun_mode_3.event_router(self, reflector_id, "process", value)
+      
+      
+      -- local old_cursor =self.reflection_indices[reflector_id].reflection_cursor
+      -- -- pass the event value to the router
+      -- -- sun_mode_3.event_router(self, reflector_id, "process", value)
+      -- if reflector_id == 5 or reflector_id == 7 then 
+      --   sun_mode_3.event_router(self, reflector_id, "process", value)
+      -- else
+      --   clock.run(ramp_val, self, reflector_id, old_cursor, value)
+      -- end
 
     end
 
@@ -564,12 +607,8 @@ end
 function sun_mode_3.event_router(self, reflector_id, event_type, value)
   
   local sun = self.index
-  -- if not self.sprocket_1 or not self.sprocket_2 then return end
 
-  if sun == 1 then
-  
-
-  elseif sun == 2 then
+  if  sun == 2 then
     if event_type == "process" then 
       -- Update changes triggered by encoder 3 and/or reflector recordings
       if reflector_id == 1 then
@@ -596,16 +635,17 @@ function sun_mode_3.event_router(self, reflector_id, event_type, value)
         local new_value =  util.linexp(1, 128, 200, 10000, value)
         self.softcut_vals[5] = new_value
         softcut.post_filter_fc(1, new_value)   
-        -- print('filter cutoff left '..new_value)
+        
+        print('filter cutoff left '..new_value)
       elseif reflector_id == 11 then
         local new_value =  util.linexp(1, 128, 200, 10000, value)
         self.softcut_vals[6] = new_value
         softcut.post_filter_fc(2, new_value)   
-        -- print('filter cutoff right '..new_value)
+        print('filter cutoff right '..new_value)
       elseif reflector_id == 13 then
-        local new_value =  util.linlin(1, 128, 0.0, 1.0, value)
+        local new_value =  util.linlin(1, 128, 0.0, 0.8, value)
         self.softcut_vals[7] = new_value
-        if new_value > 0.99 then
+        if value > 127 then
           for i=1, 2 do
             softcut.rec_level(i,0.0)
             softcut.pre_level(i,1.0)

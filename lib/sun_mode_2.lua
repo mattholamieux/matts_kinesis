@@ -332,50 +332,7 @@ function sun_mode_2.key(self, n, z)
   end
 end
 
--- function sun_mode_2.key(self, n, z)
---   local reflector_id = self.selected_ray
---   if self.state == 1 then  -- Record state
---     if self.record[reflector_id] == 1 and z == 0 then
-      
---       self.record[reflector_id] = 0
---       self.reflectors[reflector_id]:set_rec(0)
---       print("key: stop reflector recording")    
---     elseif self.record[reflector_id] == 0 and z == 0 then
---       print("key: start reflector recording",reflector_id,self.reflectors[reflector_id])
---       self.record[reflector_id] = 1
---       self.reflectors[reflector_id]:clear()
---       self.reflectors[reflector_id]:set_rec(1)
---     end
---   elseif self.state == 2 then -- Play state
---     if z == 0 then
---       if n == 2 then
---         if self.play[reflector_id] == 1 then
---           self.play[reflector_id] = 0
---           print("toggle_play: stop reflector playing", reflector_id)
---           if self.reflectors[reflector_id] and self.reflectors[reflector_id].stop then
---             self.reflectors[reflector_id]:stop()
---           end
---         else
---           self.play[reflector_id] = 1
---           print("toggle_play: start reflector playing", reflector_id)
---           if self.reflectors[reflector_id] and self.reflectors[reflector_id].start then
---             self.reflectors[reflector_id]:start()
---           end
---         end
---       end
---     end
---   elseif self.state == 3 then  -- Loop state
---     if self.loop[reflector_id] == 1 and z == 0 then
---       self.loop[reflector_id] = 0
---       print("key: stop reflector looping")
---       self.reflectors[reflector_id]:set_loop(0)
---     elseif self.loop[reflector_id] == 0 and z == 0 then
---       self.loop[reflector_id] = 1
---       print("key: start reflector looping")
---       self.reflectors[reflector_id]:set_loop(1)
---     end
---   end
--- end
+
 
 ------------------------------------------
 -- Get last selected photon for a reflector
@@ -475,6 +432,8 @@ function sun_mode_2.set_reflector_cursor_grid(self, reflector_id, val)
   -- pass the event value to the router
   sun_mode_2.event_router(self, reflector_id, "process", new_data.value)
 end
+
+
 
 ------------------------------------------
 -- Deselect a reflector

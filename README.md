@@ -1,4 +1,4 @@
-This script is a modification of @jaseknighter's kinesis script, which was written for the 2025 habitus workshops and is meant to be tinkered with by folks with a beginning to intermediate level of norns-scripting  experience (e.g. me)
+This script is a modification of @jaseknighter's _kinesis_ script, which was written for the 2025 habitus workshops and is meant to be tinkered with by folks with a beginning to intermediate level of norns-scripting  experience (e.g. me)
 
 Major additions to the original kinesis script include an additional sun mode and added grid support. 
 
@@ -10,6 +10,7 @@ Huge shoutout to @jaseknighter for answering all my questions during the habitus
 * `;install https://github.com/mattholamieux/matts_kinesis`
 * Restart norns 
 * Load the script
+* N.B. This script assumes that you have the Sunshine supercollider engine installed (e.g. via the original kinesis script)
 
 
 # Differences from original kinesis script
